@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 from datetime import datetime, timedelta
-from models.commons import INPUT_PATH, PATIENT_ID_KEY_LITERAL, TIMESTAMP_KEY_LITERAL, MELD_SCORE_KEY_LITERAL
+from models.commons import INPUT_PATH, PATIENT_ID_KEY_LITERAL, TIMESTAMP_KEY_LITERAL, MELD_SCORE_KEY_LITERAL, IS_ORIGINAL_KEY_LITERAL
 
 def generate_test_data():
     """
@@ -95,7 +95,7 @@ def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFra
 
         # MELD axis=1
         # Check if the interpolated data is original
-        g_interpolated["is_original"] = g_interpolated.apply(lambda row: time_in_original(row, g), axis=1)
+        g_interpolated[IS_ORIGINAL_KEY_LITERAL] = g_interpolated.apply(lambda row: time_in_original(row, g), axis=1)
         g_interpolated.dropna(subset=[MELD_SCORE_KEY_LITERAL], inplace=True)
 
         # this handling of empty DataFrames is needed in pandas
