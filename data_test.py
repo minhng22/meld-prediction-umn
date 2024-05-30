@@ -9,7 +9,7 @@ def test_interpolate(with_manual=False):
     if with_manual:
         df = pd.read_csv(INPUT_PATH)
         inter_amount = "W"
-        D = interpolate(df, inter_amount)
+        D = interpolate(df, inter_amount, verbal=True)
         D.to_csv("test_interpolate.csv", index=False)
 
     # unit testing

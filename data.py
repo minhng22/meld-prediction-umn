@@ -43,7 +43,7 @@ def generate_test_data():
 
     print(f"Dataframe with {len(df)} records saved to {INPUT_PATH}")
 
-def interpolate(df: pd.DataFrame, inter_amount: str) -> pd.DataFrame:
+def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFrame:
     """
     Interpolate the DataFrame by filling missing values within a specified time interval.
 
@@ -70,8 +70,8 @@ def interpolate(df: pd.DataFrame, inter_amount: str) -> pd.DataFrame:
     total_rec = 0
     total_rec_after_interpolation = 0
 
-    # Limit the forward fill because if the data is too sparse, we don"t want to fill too many values.
-    # We will filter most of the unoriginal data out.
+    # Limit the forward fill because if the data is too sparse, we don't want to fill too many values.
+    # We will filter most of the unoriginal data out in later data processing steps.
     ffill_limit = 1 
 
     df_new = pd.DataFrame(columns=df.columns)
@@ -98,18 +98,18 @@ def interpolate(df: pd.DataFrame, inter_amount: str) -> pd.DataFrame:
         g_interpolated["is_original"] = g_interpolated.apply(lambda row: time_in_original(row, g), axis=1)
         g_interpolated.dropna(subset=[MELD_SCORE_KEY_LITERAL], inplace=True)
 
-        # Concatenate the original data with the interpolated data
         # this handling of empty DataFrames is needed in pandas
         df_new = (
             g_interpolated.copy() if df_new.empty else df_new.copy() if g_interpolated.empty else pd.concat([g_interpolated, df_new])
         )
-
-    print(
-        f"Total records: {len(df.index)}, total records after interpolation: {len(df_new.index)}.\n"
-        f"Number of interpolated records: {total_rec_after_interpolation}.\n"
-        f"Number of dropped interpolated records: {total_rec_after_interpolation - len(df_new.index)}.\n"
-        f"We limit the forward fill to {ffill_limit} records. The number of dropped interpolated records represents how sparse the data is."
-    )
+    
+    if verbal:
+        print(
+            f"Total records: {len(df.index)}, total records after interpolation: {len(df_new.index)}.\n"
+            f"Number of interpolated records: {total_rec_after_interpolation}.\n"
+            f"Number of dropped interpolated records: {total_rec_after_interpolation - len(df_new.index)}.\n"
+            f"We limit the forward fill to {ffill_limit} records. The number of dropped interpolated records represents how sparse the data is."
+        )
 
     return df_new
 
