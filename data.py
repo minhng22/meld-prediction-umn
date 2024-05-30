@@ -87,7 +87,7 @@ def interpolate(df: pd.DataFrame, inter_amount: str) -> pd.DataFrame:
 
         # concat is needed to keep the original data. otherwise, the resample+ffill will drop some of the original data
         # for example, for timestamps ["2023-01-01 00:00:00", "2023-01-08 00:00:00", "2024-01-27 00:00:00"]
-        # resample+ffill with "W" will drop the record at "2024-01-27 00:00:00" because it does not fall on the weekly interval.
+        # resample+ffill with "W" will drop the record at "2024-01-27 00:00:00" because it does not fall on the weekly interval starting from "2023-01-01 00:00:00"
         # see test case "Weekly interpolation with gaps"
         g_interpolated = pd.concat([g_interpolated, g]).sort_values(TIMESTAMP_KEY_LITERAL).drop_duplicates()
 
