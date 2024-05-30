@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 from datetime import datetime, timedelta
-from commons import INPUT_PATH, PATIENT_ID_KEY_LITERAL, TIMESTAMP_KEY_LITERAL, MELD_SCORE_KEY_LITERAL
+from models.commons import INPUT_PATH, PATIENT_ID_KEY_LITERAL, TIMESTAMP_KEY_LITERAL, MELD_SCORE_KEY_LITERAL
 
 def generate_test_data():
     """

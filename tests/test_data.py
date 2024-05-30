@@ -1,6 +1,14 @@
-from data import interpolate
+# ------------------------ Easy system import handling ------------------------
+import sys
+import os
+
+module_path = os.path.abspath(os.path.join('models'))
+sys.path.append(module_path)
+# --------------------------------------------------------
+
+from models.data import interpolate
+from models.commons import INPUT_PATH
 import pandas as pd
-from commons import INPUT_PATH
 
 # with_manual = True to read the data from INPUT_PATH and interpolate it.
 def test_interpolate(with_manual=False):
