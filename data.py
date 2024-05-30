@@ -103,6 +103,13 @@ def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFra
             g_interpolated.copy() if df_new.empty else df_new.copy() if g_interpolated.empty else pd.concat([g_interpolated, df_new])
         )
     
+    # need to reset index because we processed the data by patient
+    df_new.sort_values(by=['patient_id', 'timestamp'], inplace=True)
+    df_new.reset_index(drop=True, inplace=True)
+    
+    # meld score should be float
+    df_new['score'] = df_new['score'].astype(float)
+    
     if verbal:
         print(
             f"Total records: {len(df.index)}, total records after interpolation: {len(df_new.index)}.\n"

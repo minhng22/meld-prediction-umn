@@ -20,7 +20,7 @@ def test_interpolate(with_manual=False):
         {
             "name": "Daily interpolation with gaps",
             "data": {
-                "patient_id": [1, 1, 1, 2, 2],
+                "patient_id": ['1', '1', '1', '2', '2'],
                 "timestamp": [
                     "2023-01-01 00:00:00", "2023-01-02 00:00:00", "2023-01-04 00:00:00",
                     "2023-01-01 00:00:00", "2023-01-03 00:00:00"
@@ -28,13 +28,22 @@ def test_interpolate(with_manual=False):
                 "score": [10, 20, 30, 15, 25]
             },
             "inter_amount": "d",
-            "expected_len": 7,
-            "expected_len_original": 5,
+            "expected": pd.DataFrame(data =
+                {
+                    "timestamp": [
+                        "2023-01-01 00:00:00", "2023-01-02 00:00:00", "2023-01-03 00:00:00", "2023-01-04 00:00:00",
+                        "2023-01-01 00:00:00", "2023-01-02 00:00:00", "2023-01-03 00:00:00"
+                    ],
+                    "patient_id": ['1', '1', '1', '1', '2', '2', '2'],
+                    "score": [10, 20, 20, 30, 15, 15, 25],
+                    "is_original": [True, True, False, True, True, False, True]
+                }
+            ),
         },
         {
             "name": "Weekly interpolation with no gaps",
             "data": {
-                "patient_id": [1, 1, 1, 2, 2],
+                "patient_id": ['1', '1', '1', '2', '2'],
                 "timestamp": [
                     "2023-01-01 00:00:00", "2023-01-08 00:00:00", "2023-01-15 00:00:00",
                     "2023-01-01 00:00:00", "2023-01-08 00:00:00"
@@ -44,11 +53,22 @@ def test_interpolate(with_manual=False):
             "inter_amount": "W",
             "expected_len": 5,
             "expected_len_original": 5,
+            "expected": pd.DataFrame(data =
+                {
+                    "timestamp": [
+                        "2023-01-01 00:00:00", "2023-01-08 00:00:00", "2023-01-15 00:00:00",
+                        "2023-01-01 00:00:00", "2023-01-08 00:00:00"
+                    ],
+                    "patient_id": ['1', '1', '1', '2', '2'],
+                    "score": [10, 20, 30, 15, 25],
+                    "is_original": [True, True, True, True, True]
+                }
+            ),
         },
         {
             "name": "Weekly interpolation with gaps",
             "data": {
-                "patient_id": [1, 1, 1, 2, 2],
+                "patient_id": ['1', '1', '1', '2', '2'],
                 "timestamp": [
                     "2023-01-01 00:00:00", "2023-01-08 00:00:00", "2024-01-27 00:00:00",
                     "2023-01-01 00:00:00", "2023-01-15 00:00:00"
@@ -58,6 +78,17 @@ def test_interpolate(with_manual=False):
             "inter_amount": "W",
             "expected_len": 8, # limit the forward fill to 1
             "expected_len_original": 5, # record at 2024-01-27 should not get omitted even when the forward fill starts from 2023-01-01
+            "expected": pd.DataFrame(data =
+                {
+                    "timestamp": [
+                        "2023-01-01 00:00:00", "2023-01-08 00:00:00", "2023-01-15 00:00:00", "2024-01-27 00:00:00", "2024-01-28 00:00:00",
+                        "2023-01-01 00:00:00", "2023-01-08 00:00:00", "2023-01-15 00:00:00"
+                    ],
+                    "patient_id": ['1', '1', '1', '1', '1', '2', '2', '2'],
+                    "score": [10, 20, 20, 30, 30, 15, 15, 25],
+                    "is_original": [True, True, False, True, False, True, False, True]
+                }
+            ),
         }
     ]
 
@@ -67,11 +98,14 @@ def test_interpolate(with_manual=False):
         
         result = interpolate(df, test["inter_amount"])
 
-        msg = f"Test {test['name']} failed: expected {test['expected_len']} records, got {len(result)}. Interpolated data: \n{result}"
-        assert len(result) == test["expected_len"], msg
-
-        msg = f"Test {test['name']} failed: expected {test['expected_len_original']} original records, got {result['is_original'].sum()}. Interpolated data: \n{result}"
-        assert result["is_original"].sum() == test["expected_len_original"], msg
+        try:
+            test["expected"]["timestamp"] = pd.to_datetime(test["expected"]["timestamp"])
+            test["expected"]["score"] = test["expected"]["score"].astype(float)
+            pd.testing.assert_frame_equal(result, test["expected"])
+        except AssertionError as e:
+            msg = f"Test {test['name']} failed. Interpolated data:\n{result}\nExpected:\n{test['expected']}"
+            print(msg)
+            raise e
     
     print("All tests passed.")
 
