@@ -120,5 +120,55 @@ def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFra
 
     return df_new
 
+# we have to separate train and test data since the sequence of data is not long enough.
+def find_train_test_subarr_interpolated(arr, window_size, min_original_ratio, arr_is_original):
+    # print(f'allowed count \n{int(window_size * min_original_ratio)}')
+    if len(arr) < window_size:
+        return np.array([]), np.array([])
+    ans_train, ans_test, original_data_cnt_in_window = [], [], 0
+
+    i = len(arr) - 1
+    for _ in range (0, window_size - 1):
+        if arr_is_original[i]:
+            original_data_cnt_in_window += 1
+        i -= 1
+
+    # print(i, ' ', original_data_cnt_in_window)
+
+    searching_test = True
+    while i >= 0 and searching_test:
+        if arr_is_original[i]:
+            original_data_cnt_in_window += 1
+        # Only 1 value used for test data. It must be the last one (so that we don't train based on "future" data).
+        if original_data_cnt_in_window == window_size:  # test data is not interpolated
+            ans_test += [arr[i: i + window_size]]
+            searching_test = False
+        i -= 1
+        if arr_is_original[i + window_size]:
+            original_data_cnt_in_window -= 1
+    # print(i, ' ', ans_test)
+
+    original_data_cnt_in_window = 0
+    for _ in range (0, window_size - 1):
+        if arr_is_original[i]:
+            original_data_cnt_in_window += 1
+        i -= 1
+
+    # print(i, ' ', original_data_cnt_in_window)
+
+    while i >= 0:
+        if arr_is_original[i]:
+            original_data_cnt_in_window += 1
+        if original_data_cnt_in_window >= int(window_size * min_original_ratio):
+            ans_train += [arr[i: i + window_size]]
+        i -= 1
+        if arr_is_original[i + window_size]:
+            original_data_cnt_in_window -= 1
+
+    if not ans_test:
+        return np.array(ans_train), np.array([])
+
+    return np.array(ans_train[::-1]), np.array([ans_test[-1]])
+
 if __name__ == "__main__":
     generate_test_data()
