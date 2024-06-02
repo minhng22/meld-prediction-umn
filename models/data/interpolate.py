@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
 
-from models.commons import PATIENT_ID_KEY_LITERAL, TIMESTAMP_KEY_LITERAL, MELD_SCORE_KEY_LITERAL, IS_ORIGINAL_KEY_LITERAL
+from models.commons import PATIENT_ID_KEY_LITERAL, TIMESTAMP_KEY_LITERAL, MELD_SCORE_KEY_LITERAL, \
+    IS_ORIGINAL_KEY_LITERAL
+
 
 def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFrame:
     """
@@ -14,6 +16,7 @@ def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFra
     Returns:
     pd.DataFrame: The interpolated DataFrame with an additional "is_original" column.
     """
+
     def time_in_original(row_df1, df2):
         """
         Check if the row in df1 is an original row in df2 by comparing the timestamps.
@@ -32,7 +35,7 @@ def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFra
 
     # Limit the forward fill because if the data is too sparse, we don't want to fill too many values.
     # We will filter most of the unoriginal data out in later data processing steps.
-    ffill_limit = 1 
+    ffill_limit = 1
 
     df_new = pd.DataFrame(columns=df.columns)
 
@@ -60,16 +63,17 @@ def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFra
 
         # this handling of empty DataFrames is needed in pandas
         df_new = (
-            g_interpolated.copy() if df_new.empty else df_new.copy() if g_interpolated.empty else pd.concat([g_interpolated, df_new])
+            g_interpolated.copy() if df_new.empty else df_new.copy() if g_interpolated.empty else pd.concat(
+                [g_interpolated, df_new])
         )
-    
+
     # need to reset index because we processed the data by patient
     df_new.sort_values(by=['patient_id', 'timestamp'], inplace=True)
     df_new.reset_index(drop=True, inplace=True)
-    
+
     # meld score should be float
     df_new['score'] = df_new['score'].astype(float)
-    
+
     if verbal:
         print(
             f"Total records: {len(df.index)}, total records after interpolation: {len(df_new.index)}.\n"
@@ -80,36 +84,37 @@ def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFra
 
     return df_new
 
-# we have to separate train and test data since the sequence of data is not long enough.
-def find_train_test_subarr_interpolated(arr, window_size, min_original_ratio, arr_is_original):
-    # print(f'allowed count \n{int(window_size * min_original_ratio)}')
+
+def find_train_test_subarray_interpolated(arr, window_size, min_original_ratio, arr_is_original):
     if len(arr) < window_size:
         return np.array([]), np.array([])
     ans_train, ans_test, original_data_cnt_in_window = [], [], 0
 
+    # finding the test data
     i = len(arr) - 1
-    for _ in range (0, window_size - 1):
+    for _ in range(0, window_size - 1):
         if arr_is_original[i]:
             original_data_cnt_in_window += 1
         i -= 1
-
-    # print(i, ' ', original_data_cnt_in_window)
 
     searching_test = True
     while i >= 0 and searching_test:
         if arr_is_original[i]:
             original_data_cnt_in_window += 1
         # Only 1 value used for test data. It must be the last one (so that we don't train based on "future" data).
-        if original_data_cnt_in_window == window_size:  # test data is not interpolated
+        # test data is not interpolated. We can have interpolated test data and filter interpolated data points
+        # while evaluating accuracy but edge case of that is where test data points are all interpolated which
+        # makes model accuracy evaluation meaningless.
+        if original_data_cnt_in_window == window_size:
             ans_test += [arr[i: i + window_size]]
             searching_test = False
         i -= 1
         if arr_is_original[i + window_size]:
             original_data_cnt_in_window -= 1
-    # print(i, ' ', ans_test)
 
+    # finding the train data
     original_data_cnt_in_window = 0
-    for _ in range (0, window_size - 1):
+    for _ in range(0, window_size - 1):
         if arr_is_original[i]:
             original_data_cnt_in_window += 1
         i -= 1
@@ -129,6 +134,7 @@ def find_train_test_subarr_interpolated(arr, window_size, min_original_ratio, ar
         return np.array(ans_train), np.array([])
 
     return np.array(ans_train[::-1]), np.array([ans_test[-1]])
+
 
 if __name__ == "__main__":
     pass
