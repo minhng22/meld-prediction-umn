@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from models.commons import (
-    PATIENT_ID_KEY_LITERAL, TIMESTAMP_KEY_LITERAL, MELD_SCORE_KEY_LITERAL,
+    patient_id_key_literal, timestamp_key_literal, meld_score_key_literal,
     get_input_path
 )
 
@@ -40,7 +40,7 @@ def generate_test_data():
             s = np.random.randint(1, 41)
             data.append([patient_id, t, s])  # patient_id, timestamp, score
 
-    df = pd.DataFrame(data, columns=[PATIENT_ID_KEY_LITERAL, TIMESTAMP_KEY_LITERAL, MELD_SCORE_KEY_LITERAL])
+    df = pd.DataFrame(data, columns=[patient_id_key_literal, timestamp_key_literal, meld_score_key_literal])
 
     save_path = get_input_path()
     print(f"Saving test data to {save_path}")

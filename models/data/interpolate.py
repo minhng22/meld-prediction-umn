@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 
-from models.commons import PATIENT_ID_KEY_LITERAL, TIMESTAMP_KEY_LITERAL, MELD_SCORE_KEY_LITERAL, \
-    IS_ORIGINAL_KEY_LITERAL
+from models.commons import patient_id_key_literal, timestamp_key_literal, meld_score_key_literal, \
+    is_original_key_literal
 
 
 def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFrame:
@@ -28,7 +28,7 @@ def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFra
         Returns:
         bool: True if there is a corresponding row in df2, False otherwise.
         """
-        return row_df1[TIMESTAMP_KEY_LITERAL] in df2[TIMESTAMP_KEY_LITERAL].values
+        return row_df1[timestamp_key_literal] in df2[timestamp_key_literal].values
 
     total_rec = 0
     total_rec_after_interpolation = 0
@@ -39,9 +39,9 @@ def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFra
 
     df_new = pd.DataFrame(columns=df.columns)
 
-    for _, g in df.groupby(PATIENT_ID_KEY_LITERAL):
-        g[TIMESTAMP_KEY_LITERAL] = pd.to_datetime(g[TIMESTAMP_KEY_LITERAL], format="mixed")
-        g.set_index(TIMESTAMP_KEY_LITERAL, inplace=True)
+    for _, g in df.groupby(patient_id_key_literal):
+        g[timestamp_key_literal] = pd.to_datetime(g[timestamp_key_literal], format="mixed")
+        g.set_index(timestamp_key_literal, inplace=True)
 
         total_rec += len(g)
 
@@ -52,14 +52,14 @@ def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFra
         # for example, for timestamps ["2023-01-01 00:00:00", "2023-01-08 00:00:00", "2024-01-27 00:00:00"]
         # resample+ffill with "W" will drop the record at "2024-01-27 00:00:00" because it does not fall on the weekly interval starting from "2023-01-01 00:00:00"
         # see test case "Weekly interpolation with gaps"
-        g_interpolated = pd.concat([g_interpolated, g]).sort_values(TIMESTAMP_KEY_LITERAL).drop_duplicates()
+        g_interpolated = pd.concat([g_interpolated, g]).sort_values(timestamp_key_literal).drop_duplicates()
 
         total_rec_after_interpolation += len(g_interpolated)
 
         # MELD axis=1
         # Check if the interpolated data is original
-        g_interpolated[IS_ORIGINAL_KEY_LITERAL] = g_interpolated.apply(lambda row: time_in_original(row, g), axis=1)
-        g_interpolated.dropna(subset=[MELD_SCORE_KEY_LITERAL], inplace=True)
+        g_interpolated[is_original_key_literal] = g_interpolated.apply(lambda row: time_in_original(row, g), axis=1)
+        g_interpolated.dropna(subset=[meld_score_key_literal], inplace=True)
 
         # this handling of empty DataFrames is needed in pandas
         df_new = (
@@ -83,33 +83,6 @@ def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFra
         )
 
     return df_new
-
-
-def find_train_test_subarray_interpolated(arr, window_size, min_original_ratio, arr_is_original):
-    if len(arr) < window_size:
-        return np.array([]), np.array([])
-
-    def count_originals(start, end):
-        return sum(arr_is_original[start:end])
-
-    train_data, test_data, i_test = [], [], 0
-
-    # Identify the test data
-    for i in range(len(arr) - window_size, -1, -1):
-        if count_originals(i, i + window_size) == window_size:
-            test_data.append(arr[i:i + window_size])
-            i_test = i
-            break
-
-    # Identify the train data
-    for i in range(i_test - window_size, -1, -1):
-        if count_originals(i, i + window_size) >= int(window_size * min_original_ratio):
-            train_data.append(arr[i:i + window_size])
-
-    if not test_data:
-        return np.array(train_data), np.array([])
-
-    return np.array(train_data[::-1]), np.array([test_data[-1]])
 
 
 if __name__ == "__main__":
