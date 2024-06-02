@@ -101,7 +101,7 @@ def find_train_test_subarray_interpolated(arr, window_size, min_original_ratio, 
     while i >= 0 and searching_test:
         if arr_is_original[i]:
             original_data_cnt_in_window += 1
-        # Only 1 value used for test data. It must be the last one (so that we don't train based on "future" data).
+        # Only 1 window used for test data. It must be the last one (so that we don't train based on "future" data).
         # test data is not interpolated. We can have interpolated test data and filter interpolated data points
         # while evaluating accuracy but edge case of that is where test data points are all interpolated which
         # makes model accuracy evaluation meaningless.
