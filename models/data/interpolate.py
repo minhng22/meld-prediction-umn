@@ -88,52 +88,28 @@ def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFra
 def find_train_test_subarray_interpolated(arr, window_size, min_original_ratio, arr_is_original):
     if len(arr) < window_size:
         return np.array([]), np.array([])
-    ans_train, ans_test, original_data_cnt_in_window = [], [], 0
 
-    # finding the test data
-    i = len(arr) - 1
-    for _ in range(0, window_size - 1):
-        if arr_is_original[i]:
-            original_data_cnt_in_window += 1
-        i -= 1
+    def count_originals(start, end):
+        return sum(arr_is_original[start:end])
 
-    searching_test = True
-    while i >= 0 and searching_test:
-        if arr_is_original[i]:
-            original_data_cnt_in_window += 1
-        # Only 1 window used for test data. It must be the last one (so that we don't train based on "future" data).
-        # test data is not interpolated. We can have interpolated test data and filter interpolated data points
-        # while evaluating accuracy but edge case of that is where test data points are all interpolated which
-        # makes model accuracy evaluation meaningless.
-        if original_data_cnt_in_window == window_size:
-            ans_test += [arr[i: i + window_size]]
-            searching_test = False
-        i -= 1
-        if arr_is_original[i + window_size]:
-            original_data_cnt_in_window -= 1
+    train_data, test_data, i_test = [], [], 0
 
-    # finding the train data
-    original_data_cnt_in_window = 0
-    for _ in range(0, window_size - 1):
-        if arr_is_original[i]:
-            original_data_cnt_in_window += 1
-        i -= 1
+    # Identify the test data
+    for i in range(len(arr) - window_size, -1, -1):
+        if count_originals(i, i + window_size) == window_size:
+            test_data.append(arr[i:i + window_size])
+            i_test = i
+            break
 
-    # print(i, ' ', original_data_cnt_in_window)
+    # Identify the train data
+    for i in range(i_test - window_size, -1, -1):
+        if count_originals(i, i + window_size) >= int(window_size * min_original_ratio):
+            train_data.append(arr[i:i + window_size])
 
-    while i >= 0:
-        if arr_is_original[i]:
-            original_data_cnt_in_window += 1
-        if original_data_cnt_in_window >= int(window_size * min_original_ratio):
-            ans_train += [arr[i: i + window_size]]
-        i -= 1
-        if arr_is_original[i + window_size]:
-            original_data_cnt_in_window -= 1
+    if not test_data:
+        return np.array(train_data), np.array([])
 
-    if not ans_test:
-        return np.array(ans_train), np.array([])
-
-    return np.array(ans_train[::-1]), np.array([ans_test[-1]])
+    return np.array(train_data[::-1]), np.array([test_data[-1]])
 
 
 if __name__ == "__main__":

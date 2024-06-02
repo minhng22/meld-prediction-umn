@@ -175,7 +175,8 @@ def test_find_train_test_subarray_interpolated():
                 err_msg=f"Test data for test {test['name']} is incorrect. Expected: {test['expected_test']}, got: {test_arr}"
             )
         except AssertionError as e:
-            raise f"Test {test['name']} failed.\n"
+            f"Test {test['name']} failed.\n"
+            raise e
 
 
 if __name__ == "__main__":
