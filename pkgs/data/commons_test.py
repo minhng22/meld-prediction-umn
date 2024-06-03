@@ -3,7 +3,7 @@ from pkgs.data.commons import bottom_patient_by_len_record, generate_timestep_fo
 import pandas as pd
 
 
-def test_bottom():
+def test_bottom_patient_by_len_record():
     test_cases = [
         {
             "name": "Test 1 - Basic functionality",
