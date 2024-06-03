@@ -1,12 +1,14 @@
-import os
 from datetime import datetime, timedelta
+
 import numpy as np
 import pandas as pd
 
 from models.commons import (
     patient_id_key_literal, timestamp_key_literal, meld_score_key_literal,
-    get_input_path
+    get_input_path, generalize_ratio, real_data_ratio
 )
+from models.data.harvest import harvest_data_with_interpolate
+from models.data.plot import plot_data
 
 
 def generate_test_data():
@@ -30,14 +32,14 @@ def generate_test_data():
     data = []
 
     for patient_id in range(1, num_patients + 1):
-        num_records = 100
+        num_records = 200
         start_time = datetime(2022, 1, 1)
         t = start_time
         for record_id in range(num_records):
             t = t + timedelta(days=1)
-            if record_id % 5 == 0:
+            if record_id % 20 == 0:
                 t = t + timedelta(days=np.random.randint(1, 1000))
-            s = np.random.randint(1, 41)
+            s = np.random.randint(1, 40)
             data.append([patient_id, t, s])  # patient_id, timestamp, score
 
     df = pd.DataFrame(data, columns=[patient_id_key_literal, timestamp_key_literal, meld_score_key_literal])
@@ -49,5 +51,20 @@ def generate_test_data():
     print(f"Dataframe with {len(df)} records saved to {save_path}")
 
 
+def generate_harvested_data_graph(
+        window_size: int, real_data_ratio_l: float, generalize_ratio_l: float, num_observed_l, num_predicted_l
+):
+    df = pd.read_csv(get_input_path())
+    train, test, generalize = harvest_data_with_interpolate(
+        df, window_size, real_data_ratio_l, generalize_ratio_l, interpolate_amount="d"
+    )
+    # first feature is MELD, second feature is timestamp (as float)
+    plot_data(
+        np.squeeze(train[:, :, :1], axis=-1),
+        np.squeeze(test[:, :, :1], axis=-1),
+        np.squeeze(generalize[:, :, :1], axis=-1),
+        num_observed_l, num_predicted_l, f"window_size{window_size}_real_data_ratio{real_data_ratio_l}_generalize_ratio{generalize_ratio_l}")
+
+
 if __name__ == "__main__":
-    generate_test_data()
+    pass

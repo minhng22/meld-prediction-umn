@@ -35,7 +35,7 @@ def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFra
 
     # Limit the forward fill because if the data is too sparse, we don't want to fill too many values.
     # We will filter most of the unoriginal data out in later data processing steps.
-    ffill_limit = 1
+    ffill_limit = 100
 
     df_new = pd.DataFrame(columns=df.columns)
 
@@ -76,14 +76,10 @@ def interpolate(df: pd.DataFrame, inter_amount: str, verbal=False) -> pd.DataFra
 
     if verbal:
         print(
-            f"Total records: {len(df.index)}, total records after interpolation: {len(df_new.index)}.\n"
-            f"Number of interpolated records: {total_rec_after_interpolation}.\n"
+            f"Total records: {len(df.index)}, total records after processed: {len(df_new.index)}.\n"
+            f"Number of records after interpolation: {total_rec_after_interpolation}.\n"
             f"Number of dropped interpolated records: {total_rec_after_interpolation - len(df_new.index)}.\n"
             f"We limit the forward fill to {ffill_limit} records. The number of dropped interpolated records represents how sparse the data is."
         )
 
     return df_new
-
-
-if __name__ == "__main__":
-    pass

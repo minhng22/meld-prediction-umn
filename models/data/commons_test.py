@@ -1,5 +1,5 @@
 import numpy as np
-from models.data.commons import bottom_patient_by_len_record
+from models.data.commons import bottom_patient_by_len_record, generate_timestep_for_plot
 
 def test_bottom():
     test_cases = [
@@ -78,3 +78,47 @@ def test_bottom():
             print(f"Test {test['name']} failed.\n")
             raise e
 
+
+def test_generate_data():
+    test_cases = [
+        {
+            "name": "Test Case 1",
+            "X": 3,
+            "y": 4,
+            "expected": np.array([[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]])
+        },
+        {
+            "name": "Test Case 2",
+            "X": 2,
+            "y": 3,
+            "expected": np.array([[1, 2, 3], [1, 2, 3]])
+        },
+        {
+            "name": "Test Case 3",
+            "X": 5,
+            "y": 1,
+            "expected": np.array([[1], [1], [1], [1], [1]])
+        },
+        {
+            "name": "Test Case 4",
+            "X": 1,
+            "y": 5,
+            "expected": np.array([[1, 2, 3, 4, 5]])
+        },
+    ]
+
+    for test in test_cases:
+        X = test["X"]
+        y = test["y"]
+        expected = test["expected"]
+
+        result = generate_timestep_for_plot(X, y)
+
+        try:
+            assert np.array_equal(result, expected), f"Expected {expected} but got {result}"
+            assert result.shape == (X, y), f"Expected shape ({X}, {y}) but got {result.shape}"
+        except AssertionError as e:
+            print(f"Test {test['name']} failed.\n")
+            raise e
+
+    print("All tests passed.")

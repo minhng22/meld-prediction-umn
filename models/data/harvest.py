@@ -3,7 +3,6 @@ import pandas as pd
 
 from models.data.interpolate import interpolate
 from models.data.commons import bottom_patient_by_len_record
-from models.commons import real_data_ratio, generalize_ratio
 
 
 # find_train_test finds the training and test data from the input array.
@@ -34,11 +33,22 @@ def find_train_test(arr, window_size, min_original_ratio, arr_is_original):
     return np.array(train_data[::-1]), np.array([test_data[-1]])
 
 
+def get_patients_from_dict_as_np(patients_dict: dict, black_list, in_or_not: bool):
+    ans = None
+    for k, v in patients_dict.items():
+        if (k in black_list) == in_or_not:
+            if ans is None:
+                ans = v
+            else:
+                ans = np.concatenate((ans, v), axis=0)
+    return ans if ans is not None else np.array([])
+
 # get train, test, and generalize data from the input dataframe.
 # data is interpolated to fill in missing values.
 # data is then collected using sliding window algorithm.
-def harvest_data_with_interpolate(df: pd.DataFrame, window_size: int):
-    df = interpolate(df, "d")
+def harvest_data_with_interpolate(df: pd.DataFrame, window_size: int, real_data_ratio: int, generalize_ratio: int,
+                                  interpolate_amount: str = "d"):
+    df = interpolate(df, interpolate_amount, verbal=True)
     ans_train, ans_test = {}, {}
 
     for s_id, g in df.groupby("patient_id"):
@@ -48,21 +58,20 @@ def harvest_data_with_interpolate(df: pd.DataFrame, window_size: int):
         arr_train_time, arr_test_time = find_train_test(
             g["timestamp"].values, window_size, real_data_ratio, g["is_original"].values
         )
-        arr_train_time, arr_test_time = arr_train_time.astype(float), arr_test_time.astype(float)
 
-        if arr_train_time.shape == (0,) or arr_train_score.shape == (0,) or arr_test_score.shape == (
-        0,) or arr_test_time.shape == (0,):
+        def add_dim(arr):
+            arr = arr.astype(float)
+            return np.expand_dims(arr, axis=-1)
+
+        arr_train_time, arr_test_time, arr_train_score, arr_test_score = (
+            add_dim(arr_train_time), add_dim(arr_test_time), add_dim(arr_train_score), add_dim(arr_test_score))
+
+        if (arr_train_time.shape[0] == 0 or arr_train_score.shape[0] == 0 or
+                arr_test_score.shape[0] == 0 or arr_test_time.shape[0] == 0):
             continue
 
-        assert arr_train_time.shape == arr_train_score.shape, Exception(
-            f"{arr_train_time.shape[0]} != {arr_train_score.shape[0]}")
-        assert len(arr_train_score.shape) == 2 and len(arr_test_score.shape) == 2, Exception(
-            f"{arr_test_score.shape} and {arr_train_score.shape} wrong shape")
-
-        ans_train[s_id] = np.concatenate(
-            (np.expand_dims(arr_train_score, axis=-1), np.expand_dims(arr_train_time, axis=-1)), axis=2)
-        ans_test[s_id] = np.concatenate(
-            (np.expand_dims(arr_test_score, axis=-1), np.expand_dims(arr_test_time, axis=-1)), axis=2)
+        ans_train[s_id] = np.concatenate((arr_train_score, arr_train_time), axis=2)
+        ans_test[s_id] = np.concatenate((arr_test_score, arr_test_time), axis=2)
 
     print(
         f"number of train patients are: {len(ans_train)}\n"
@@ -72,37 +81,9 @@ def harvest_data_with_interpolate(df: pd.DataFrame, window_size: int):
     print("constructing generalize set")
     bot_patient_ids = bottom_patient_by_len_record(ans_test, generalize_ratio)
 
-    # if interpolate ratio is not 1, we can only get data from ans_test
-    ans_generalize = dict(dict((k, ans_test[k]) for k in ans_test if k in bot_patient_ids))
-    ans_train = dict((k, ans_train[k]) for k in ans_train if k not in bot_patient_ids)
-    ans_test = dict((k, ans_test[k]) for k in ans_test if k not in bot_patient_ids)
-
-    print(
-        f"number of generalize patients are: {len(ans_generalize)}\n"
-        f"number of train patients are: {len(ans_train)}\n"
-        f"number of test patients are: {len(ans_test)}"
-    )
-
-    print("converting to np")
-    ans_train_np, ans_test_np, ans_generalize_np = None, None, None
-
-    for _, v in ans_train.items():
-        if ans_train_np is None:
-            ans_train_np = v
-        else:
-            ans_train_np = np.concatenate((ans_train_np, v), axis=0)
-
-    for _, v in ans_test.items():
-        if ans_test_np is None:
-            ans_test_np = v
-        else:
-            ans_test_np = np.concatenate((ans_test_np, v), axis=0)
-
-    for _, v in ans_generalize.items():
-        if ans_generalize_np is None:
-            ans_generalize_np = v
-        else:
-            ans_generalize_np = np.concatenate((ans_generalize_np, v), axis=0)
+    ans_generalize_np = get_patients_from_dict_as_np(ans_test, bot_patient_ids, True)
+    ans_train_np = get_patients_from_dict_as_np(ans_train, bot_patient_ids, False)
+    ans_test_np = get_patients_from_dict_as_np(ans_test, bot_patient_ids, False)
 
     print(
         f"shape of train data is: {ans_train_np.shape}\n"

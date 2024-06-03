@@ -12,3 +12,8 @@ def get_input_path():
     current_script_path = Path(__file__)
     project_dir = current_script_path.parent.parent
     return str(project_dir) + "/data/patient_scores.csv"
+
+def get_figs_path():
+    current_script_path = Path(__file__)
+    project_dir = current_script_path.parent.parent
+    return str(project_dir) + "/figs"
