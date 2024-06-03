@@ -42,6 +42,29 @@ def test_interpolate(with_manual=False):
             ),
         },
         {
+            "name": "Daily interpolation with multiple records daily",
+            "data": {
+                "patient_id": ['1', '1', '1', '2', '2'],
+                "timestamp": [
+                    "2023-01-01 00:00:00", "2023-01-01 07:00:00", "2023-01-04 00:00:00",
+                    "2023-01-01 00:00:00", "2023-01-03 00:00:00"
+                ],
+                "score": [10, 20, 30, 15, 25]
+            },
+            "inter_amount": "d",
+            "expected": pd.DataFrame(data=
+            {
+                "timestamp": [
+                    "2023-01-01 00:00:00", "2023-01-02 00:00:00", "2023-01-03 00:00:00", "2023-01-04 00:00:00",
+                    "2023-01-01 00:00:00", "2023-01-02 00:00:00", "2023-01-03 00:00:00"
+                ],
+                "patient_id": ['1', '1', '1', '1', '2', '2', '2'],
+                "score": [10, 20, 20, 30, 15, 15, 25],
+                "is_original": [True, True, False, True, True, False, True]
+            }
+            ),
+        },
+        {
             "name": "Weekly interpolation with no gaps",
             "data": {
                 "patient_id": ['1', '1', '1', '2', '2'],

@@ -52,18 +52,19 @@ def generate_test_data():
 
 
 def generate_harvested_data_graph(
-        window_size: int, real_data_ratio_l: float, generalize_ratio_l: float, num_observed_l, num_predicted_l
+        real_data_ratio_l: float, generalize_ratio_l: float, num_observed_l, num_predicted_l
 ):
     df = pd.read_csv(get_input_path())
     train, test, generalize = harvest_data_with_interpolate(
-        df, window_size, real_data_ratio_l, generalize_ratio_l, interpolate_amount="d"
+        df, num_observed_l + num_predicted_l, real_data_ratio_l, generalize_ratio_l, interpolate_amount="d"
     )
     # first feature is MELD, second feature is timestamp (as float)
     plot_data(
         np.squeeze(train[:, :, :1], axis=-1),
         np.squeeze(test[:, :, :1], axis=-1),
         np.squeeze(generalize[:, :, :1], axis=-1),
-        num_observed_l, num_predicted_l, f"window_size{window_size}_real_data_ratio{real_data_ratio_l}_generalize_ratio{generalize_ratio_l}")
+        num_observed_l, num_predicted_l,
+        f"window_size{num_observed_l + num_predicted_l}_real_data_ratio{real_data_ratio_l}_generalize_ratio{generalize_ratio_l}")
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from pkgs.data.interpolate import interpolate
-from pkgs.data.commons import bottom_patient_by_len_record
+from pkgs.data.commons import bottom_patient_by_len_record, mean_day
 
 
 # find_train_test finds the training and test data from the input array.
@@ -47,7 +47,8 @@ def get_patients_from_dict_as_np(patients_dict: dict, black_list, in_or_not: boo
 # data is interpolated to fill in missing values.
 # data is then collected using sliding window algorithm.
 def harvest_data_with_interpolate(df: pd.DataFrame, window_size: int, real_data_ratio: int, generalize_ratio: int,
-                                  interpolate_amount: str = "d"):
+                                  interpolate_amount: str):
+    df = mean_day(df)
     df = interpolate(df, interpolate_amount, verbal=True)
     ans_train, ans_test = {}, {}
 
