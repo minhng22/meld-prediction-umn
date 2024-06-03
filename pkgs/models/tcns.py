@@ -63,11 +63,10 @@ class TCNModel(Module):
         self.tcn = nn.Sequential(*cnn_layers)
 
         # Output layer
-        self.fc = Linear(output_length, self.num_feature)
+        self.fc = Linear(cnn_channels[-1], self.num_feature)
 
     def forward(self, x: torch.Tensor):
         tcn_op = self.tcn(x)
-
         return self.fc(tcn_op)
 
 
@@ -78,11 +77,10 @@ class TCNLSTMModel(Module):
     ):
         super(TCNLSTMModel, self).__init__()
         self.num_feature = 1
+        self.hidden_size = hidden_size
 
         def calculate_output_length(length_in, kernel_size_l, stride_l, padding_l, dilation_l):
             return (length_in + 2 * padding_l - dilation_l * (kernel_size_l - 1) - 1) // stride_l + 1
-
-        self.hidden_size = hidden_size
 
         cnn_channels = []
         for i in range(tcn_num_layers):
@@ -133,9 +131,9 @@ class TCNLSTMModel(Module):
 
         # LSTM layers
         self.encoder_lstm = LSTM(
-            output_length,
-            hidden_size,
-            num_layers,
+            input_size=cnn_channels[-1],
+            hidden_size=hidden_size,
+            num_layers=num_layers,
             batch_first=True,
             dropout=dropout_lstm,
         )
@@ -145,7 +143,6 @@ class TCNLSTMModel(Module):
 
     def forward(self, x: torch.Tensor):
         tcn_op = self.tcn(x)
-
         ec_op, (_, _) = self.encoder_lstm(tcn_op)
 
         return self.fc(ec_op)

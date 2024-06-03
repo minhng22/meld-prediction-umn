@@ -5,6 +5,7 @@ class CNNLSTMModel(Module):
     def __init__(self, num_layers, hidden_size, dropout_lstm, num_obs, num_pred):
         super(CNNLSTMModel, self).__init__()
         self.hidden_size = hidden_size
+
         self.num_feature_ip = 2
         self.num_feature_op = 1
 
@@ -20,17 +21,13 @@ class CNNLSTMModel(Module):
         # Output layer
         self.fc = Linear(hidden_size, self.num_feature_op)
 
-        kernel_size = 1
-
         self.encoder_cnn = Conv1d(
             in_channels=num_obs,
             out_channels=num_pred,
-            kernel_size=kernel_size,
+            kernel_size=1,
         )
         self.relu = ReLU()
-        self.maxpool = MaxPool1d(
-            kernel_size=kernel_size
-        )
+        self.maxpool = MaxPool1d(kernel_size=1)
 
     def forward(self, x):
         cnn_op = self.encoder_cnn(x)

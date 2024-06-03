@@ -1,4 +1,3 @@
-from pkgs.models.attentions import TransformerModel
 from pkgs.models.cnns import CNNLSTMModel
 from pkgs.models.lstms import AttentionAutoencoderLSTMModel, LSTMModel
 from pkgs.models.tcns import TCNLSTMModel, TCNModel
@@ -24,7 +23,7 @@ def get_model(model_name, s_s, device, num_obs, num_pred):
             num_layers=s_s["num_layers"],
             hidden_size=s_s["hidden_size"],
             dropout_lstm=s_s["dropout_lstm"],
-            num_obs=num_pred,
+            num_obs=num_obs,
             num_pred=num_pred,
         )
     elif model_name == "tcn_lstm":
@@ -55,17 +54,6 @@ def get_model(model_name, s_s, device, num_obs, num_pred):
             drop_out=s_s["dropout_lstm"],
             num_pred=num_pred,
             num_obs=num_obs,
-        )
-    elif model_name == "transformer":
-        m = TransformerModel(
-            n_head=s_s["n_head"],
-            num_encoder_layers=s_s["num_encoder_layers"],
-            n_head_factor=s_s["n_head_factor"],
-            dropout_pos_encoding=s_s["dropout_pos_encoding"],
-            num_decoder_layers=s_s["num_decoder_layers"],
-            dropout_transformer=s_s["dropout_transformer"],
-            activation_fn=s_s["activation_fn"],
-            num_pred=num_pred,
         )
     else:
         raise ValueError(f"Model {model_name} not found")

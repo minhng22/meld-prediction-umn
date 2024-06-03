@@ -134,4 +134,5 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
 
 
 if __name__ == "__main__":
-    run_exp(5, 2, 0.9, 0.25, "d", ["transformer"], True)
+    run_exp(5, 2, 0.9, 0.25, "d",
+            ["attention_lstm"], True)
