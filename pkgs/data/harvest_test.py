@@ -1,5 +1,5 @@
 import numpy as np
-from models.data.harvest import find_train_test, harvest_data_with_interpolate, get_patients_from_dict_as_np
+from pkgs.data.harvest import find_train_test, harvest_data_with_interpolate, get_patients_from_dict_as_np
 import pandas as pd
 
 

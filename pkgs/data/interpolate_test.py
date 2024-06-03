@@ -1,7 +1,6 @@
-from models.commons import get_input_path
-from models.data.interpolate import interpolate
+from pkgs.commons import get_input_path
+from pkgs.data.interpolate import interpolate
 import pandas as pd
-import numpy as np
 
 
 # with_manual = True to read the data from INPUT_PATH and interpolate it.

@@ -1,8 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import os
-from models.commons import get_figs_path
-from models.data.commons import generate_timestep_for_plot
+from pkgs.commons import get_figs_path
+from pkgs.data.commons import generate_timestep_for_plot
 
 
 def plot_data(train, test, generalize, num_observed, num_predicted, label_post_text = ""):

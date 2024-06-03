@@ -3,12 +3,12 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
-from models.commons import (
+from pkgs.commons import (
     patient_id_key_literal, timestamp_key_literal, meld_score_key_literal,
     get_input_path, generalize_ratio, real_data_ratio
 )
-from models.data.harvest import harvest_data_with_interpolate
-from models.data.plot import plot_data
+from pkgs.data.harvest import harvest_data_with_interpolate
+from pkgs.data.plot import plot_data
 
 
 def generate_test_data():

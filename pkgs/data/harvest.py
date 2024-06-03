@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from models.data.interpolate import interpolate
-from models.data.commons import bottom_patient_by_len_record
+from pkgs.data.interpolate import interpolate
+from pkgs.data.commons import bottom_patient_by_len_record
 
 
 # find_train_test finds the training and test data from the input array.

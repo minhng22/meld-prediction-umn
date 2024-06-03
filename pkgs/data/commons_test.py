@@ -1,5 +1,5 @@
 import numpy as np
-from models.data.commons import bottom_patient_by_len_record, generate_timestep_for_plot
+from pkgs.data.commons import bottom_patient_by_len_record, generate_timestep_for_plot
 
 def test_bottom():
     test_cases = [
