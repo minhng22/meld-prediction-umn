@@ -2,7 +2,7 @@ from torch.utils.data import DataLoader, Dataset
 from sklearn.preprocessing import MinMaxScaler
 import torch
 import numpy as np
-from pkgs.data.commons import get_input_and_validate_data
+from pkgs.data.commons import split
 
 class SlidingWindowDataset(Dataset):
     def __init__(self, trains, tests, generalizes, num_obs, num_pred):
@@ -17,24 +17,24 @@ class SlidingWindowDataset(Dataset):
         self.tests_original = tests
         self.generalizes_original = generalizes
 
-        self.train_ips_meld, self.train_targets_meld = get_input_and_validate_data(
+        self.train_ips_meld, self.train_targets_meld = split(
             self.meld_sc.fit_transform(trains[:, :, 0]), num_obs, num_pred
         )
-        self.train_ips_time, _ = get_input_and_validate_data(
+        self.train_ips_time, _ = split(
             self.time_sc.fit_transform(trains[:, :, 1]), num_obs, num_pred
         )
 
-        self.test_ips_meld, _ = get_input_and_validate_data(
+        self.test_ips_meld, _ = split(
             self.meld_sc.transform(tests[:, :, 0]), num_obs, num_pred
         )
-        self.generalize_ips_meld, _ = get_input_and_validate_data(
+        self.generalize_ips_meld, _ = split(
             self.meld_sc.transform(generalizes[:, :, 0]), num_obs, num_pred
         )
 
-        self.test_ips_time, _ = get_input_and_validate_data(
+        self.test_ips_time, _ = split(
             self.time_sc.transform(tests[:, :, 1]), num_obs, num_pred
         )
-        self.generalize_ips_time, _ = get_input_and_validate_data(
+        self.generalize_ips_time, _ = split(
             self.time_sc.transform(generalizes[:, :, 1]), num_obs, num_pred
         )
 

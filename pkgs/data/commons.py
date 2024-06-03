@@ -28,8 +28,7 @@ def generate_timestep_for_plot(x, y):
     return T
 
 
-def get_input_and_validate_data(
-        data: np.array, num_observed: int, num_predict: int):
+def split(data: np.array, num_observed: int, num_predict: int):
     print("shape of data", data.shape)
 
     if len(data.shape) != 2:
