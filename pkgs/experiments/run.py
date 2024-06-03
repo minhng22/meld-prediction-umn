@@ -2,7 +2,7 @@ import time, os
 import pandas as pd
 import torch
 
-from pkgs.commons import get_input_path
+from pkgs.commons import input_path
 from pkgs.data.harvest import harvest_data_with_interpolate
 from pkgs.data.dataset import SlidingWindowDataset
 
@@ -10,7 +10,7 @@ from pkgs.data.dataset import SlidingWindowDataset
 def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_amount, to_run_models):
     print(f"pre-processing data, experimenting on obs {num_obs} pred {num_pred}")
     s = time.time()
-    df = pd.read_csv(get_input_path())
+    df = pd.read_csv(input_path)
 
     exp_trains, exp_tests, exp_generalizes = harvest_data_with_interpolate(
         df, num_obs + num_pred, real_data_ratio, generalize_ratio, interpolate_amount)

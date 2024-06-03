@@ -1,4 +1,4 @@
-from pkgs.commons import get_input_path
+from pkgs.commons import input_path
 from pkgs.data.interpolate import interpolate
 import pandas as pd
 
@@ -8,7 +8,7 @@ def test_interpolate(with_manual=False):
     # manual testing
     # save the interpolated data to verify the correctness of the interpolate function
     if with_manual:
-        df = pd.read_csv(get_input_path())
+        df = pd.read_csv(input_path)
         inter_amount = "W"
         D = interpolate(df, inter_amount, verbal=True)
         D.to_csv("test_interpolate.csv", index=False)

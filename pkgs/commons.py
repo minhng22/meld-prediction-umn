@@ -8,12 +8,10 @@ is_original_key_literal = "is_original"
 real_data_ratio = 0.9
 generalize_ratio = 0.25
 
-def get_input_path():
-    current_script_path = Path(__file__)
-    project_dir = current_script_path.parent.parent
-    return str(project_dir) + "/data/patient_scores.csv"
 
-def get_figs_path():
+def project_dir():
     current_script_path = Path(__file__)
-    project_dir = current_script_path.parent.parent
-    return str(project_dir) + "/figs"
+    return str(current_script_path.parent.parent)
+
+input_path = project_dir() + "/data/patient_scores.csv"
+figs_path = project_dir() + "/figs"

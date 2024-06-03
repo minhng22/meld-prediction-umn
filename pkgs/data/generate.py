@@ -5,7 +5,7 @@ import pandas as pd
 
 from pkgs.commons import (
     patient_id_key_literal, timestamp_key_literal, meld_score_key_literal,
-    get_input_path, generalize_ratio, real_data_ratio
+    input_path, generalize_ratio, real_data_ratio
 )
 from pkgs.data.harvest import harvest_data_with_interpolate
 from pkgs.data.plot import plot_data
@@ -44,7 +44,7 @@ def generate_test_data():
 
     df = pd.DataFrame(data, columns=[patient_id_key_literal, timestamp_key_literal, meld_score_key_literal])
 
-    save_path = get_input_path()
+    save_path = input_path
     print(f"Saving test data to {save_path}")
     df.to_csv(save_path, index=False)
 
@@ -54,7 +54,7 @@ def generate_test_data():
 def generate_harvested_data_graph(
         real_data_ratio_l: float, generalize_ratio_l: float, num_observed_l, num_predicted_l
 ):
-    df = pd.read_csv(get_input_path())
+    df = pd.read_csv(input_path)
     train, test, generalize = harvest_data_with_interpolate(
         df, num_observed_l + num_predicted_l, real_data_ratio_l, generalize_ratio_l, interpolate_amount="d"
     )
@@ -68,4 +68,4 @@ def generate_harvested_data_graph(
 
 
 if __name__ == "__main__":
-    pass
+    generate_test_data()

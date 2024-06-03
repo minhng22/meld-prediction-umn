@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from pkgs.commons import get_figs_path
+from pkgs.commons import figs_path
 from pkgs.data.commons import generate_timestep_for_plot
 
 
@@ -30,7 +30,7 @@ def plot_data(train, test, generalize, num_observed, num_predicted, label_post_t
         plt.xticks(np.arange(1, avg.shape[0] + 1, stk))
         plt.title(f'Dataset analysis obs {num_observed} pred {num_predicted}')
 
-        figPath = get_figs_path() + f'/obs_{num_observed}_pred_{num_predicted}/analyze_{label}_{label_post_text}.png'
+        figPath = figs_path + f'/obs_{num_observed}_pred_{num_predicted}/analyze_{label}_{label_post_text}.png'
         print(f"Saving figure to {figPath}")
 
         plt.savefig(figPath, bbox_inches="tight")
