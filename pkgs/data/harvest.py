@@ -46,7 +46,7 @@ def get_patients_from_dict_as_np(patients_dict: dict, black_list, in_or_not: boo
 # get train, test, and generalize data from the input dataframe.
 # data is interpolated to fill in missing values.
 # data is then collected using sliding window algorithm.
-def harvest_data_with_interpolate(df: pd.DataFrame, window_size: int, real_data_ratio: int, generalize_ratio: int,
+def harvest_data_with_interpolate(df: pd.DataFrame, window_size: int, real_data_ratio: float, generalize_ratio: float,
                                   interpolate_amount: str):
     df = mean_day(df)
     df = interpolate(df, interpolate_amount, verbal=True)

@@ -68,4 +68,4 @@ def generate_harvested_data_graph(
 
 
 if __name__ == "__main__":
-    generate_test_data()
+    generate_harvested_data_graph(0.9, 0.25, 5, 2)

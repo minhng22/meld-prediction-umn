@@ -37,7 +37,7 @@ def plot_data(train, test, generalize, num_observed, num_predicted, label_post_t
         plt.title(f'Dataset analysis obs {num_observed} pred {num_predicted}')
 
         figPath = (figs_path(num_observed, num_predicted) +
-                   f'/obs_{num_observed}_pred_{num_predicted}/analyze_{label}_{label_post_text}.png')
+                   f'/analyze_{label}_{label_post_text}.png')
         print(f"Saving figure to {figPath}")
 
         plt.savefig(figPath, bbox_inches="tight")
