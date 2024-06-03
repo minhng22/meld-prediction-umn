@@ -5,7 +5,7 @@ from torch.nn import LSTM, MultiheadAttention, Linear
 class AttentionAutoencoderLSTMModel(Module):
     def __init__(self, num_layers, num_heads, hidden_size, dropout_lstm, dropout_attn, num_pred, device):
         super(AttentionAutoencoderLSTMModel, self).__init__()
-        self.hidden_size = self.find_hideen(hidden_size, num_heads)
+        self.hidden_size = self.find_hidden(hidden_size, num_heads)
         self.num_feature_ip = 2 # MELD and timestamp
 
         # LSTM layers
@@ -34,7 +34,7 @@ class AttentionAutoencoderLSTMModel(Module):
         self.num_feature_decoder_lstm = num_pred
         self.device = device
 
-    def find_hideen(self, hidden, num_head):
+    def find_hidden(self, hidden, num_head):
         h = hidden
         while h % num_head != 0:
             h += 1

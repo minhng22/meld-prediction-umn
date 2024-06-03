@@ -17,7 +17,7 @@ input_path = project_dir() + "/data/patient_scores.csv"
 
 
 def exp_path(num_obs, num_pred):
-    return project_dir() + f"/experiments/obs_{num_obs}_pred_{num_pred}"
+    return project_dir() + f"/experiments_generated_data/obs_{num_obs}_pred_{num_pred}"
 def figs_path(num_obs, num_pred):
     return exp_path(num_obs, num_pred) + "/figs"
 def model_save_path(num_obs, num_pred):

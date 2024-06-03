@@ -64,15 +64,16 @@ def find_better_model(model_a, model_b, test_ips, original_meld_test, scaler, de
     curr_rmse, _ = model_eval(model_a, test_ips, original_meld_test, scaler, device, num_obs, num_pred)
     best_rmse, _ = model_eval(model_b, test_ips, original_meld_test, scaler, device, num_obs, num_pred)
 
-    if curr_rmse > best_rmse:
+    if curr_rmse < best_rmse:
         return model_a
     return model_b
 
 
-def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_amount, to_run_models):
+def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_amount, to_run_models,
+            use_existing_best_model):
     batch_size = 256
     device = torch.device("cpu")
-    n_trials = 3
+    n_trials = 1
 
     print(f"pre-processing data, experimenting on obs {num_obs} pred {num_pred}")
     s = time.time()
@@ -100,11 +101,14 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
 
         if os.path.exists(model_path):
             print('best model exists')
-            best_model = find_better_model(
-                torch.load(model_path), ex_optuna(
-                    train_dataloader=dl, model_name=model_name, num_obs=num_obs, num_pred=num_pred, n_trials=n_trials,
-                    device=device
-                ), test_ips, original_meld_test_set, dataset.meld_sc, device, num_obs, num_pred)
+            if not use_existing_best_model:
+                best_model = find_better_model(
+                    torch.load(model_path), ex_optuna(
+                        train_dataloader=dl, model_name=model_name, num_obs=num_obs, num_pred=num_pred,
+                        n_trials=n_trials, device=device
+                    ), test_ips, original_meld_test_set, dataset.meld_sc, device, num_obs, num_pred)
+            else:
+                best_model = torch.load(model_path)
         else:
             best_model = ex_optuna(
                 train_dataloader=dl, model_name=model_name, num_obs=num_obs, num_pred=num_pred, n_trials=n_trials,
@@ -130,4 +134,4 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
 
 
 if __name__ == "__main__":
-    run_exp(5, 1, 0.9, 0.25, "d", ["lstm"])
+    run_exp(5, 2, 0.9, 0.25, "d", ["transformer"], True)

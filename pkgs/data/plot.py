@@ -93,29 +93,13 @@ def plot_line(y_target, y, plot_name, model_name, num_obs, num_pred, ext=""):
     plt.clf()
 
 
-def analyze_timestep_rmse(ip, op, exp_name, model_name):
-    print(f"Calculating rmse for {exp_name}")
-    if ip.shape[1] != op.shape[1]:
-        raise ValueError("ip and op must have same shape")
-    rmses = calculate_rmse_of_time_step(ip, op)
-
-    print(f"rmses: {rmses}")
-
-    plt.plot(list(range(len(rmses))), rmses)
-
-    plt.xlabel('Day')
-    plt.ylabel('RMSE')
-    plt.title('RMSE by day')
-
-    plt.savefig(RMSE_DAYS_FIG_PATH + "/" + exp_name + "_" + model_name, bbox_inches="tight")
-    plt.clf()
-
-
 def analyze_ci_and_pi(target, prediction, exp_name, model_name, num_obs, num_pred):
     CONFIDENCE_LEVEL = 0.95  # common value for confidence level
 
     def analyze_ci():
+        print(f"Calculating confidence interval for {exp_name} {model_name}")
         data = calculate_rmse_of_time_step(target, prediction)
+        print(f"RMSE of timestep data: {data}")
 
         n = len(data)
         mean = np.mean(data)
@@ -127,15 +111,15 @@ def analyze_ci_and_pi(target, prediction, exp_name, model_name, num_obs, num_pre
         upper_bound = mean + margin_of_error
 
         print(
-            f"Confidence interval {CONFIDENCE_LEVEL * 100}% for RMSE for {exp_name} {model_name}: {lower_bound:.2f} {upper_bound:.2f}")
+            f"Confidence interval {CONFIDENCE_LEVEL * 100}% for RMSE for {exp_name} {model_name}.\n" 
+            f"data: {data}\n"
+            f"lower_bound {lower_bound:.2f} upper_bound {upper_bound:.2f} mean {mean:.2f} standard_error {standard_error:.2f}\n")
 
     def analyze_pi():
+        print(f"Calculating prediction interval for {exp_name} {model_name}")
         residuals = target - prediction
-
         residual_std = np.std(residuals)
-
         z_score = norm.ppf((100 - CONFIDENCE_LEVEL) / 200)
-
         margin_of_error = z_score * residual_std
 
         lower_bound = np.min(prediction - margin_of_error, axis=0)
