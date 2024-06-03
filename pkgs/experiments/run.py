@@ -2,7 +2,7 @@ import time, os
 import pandas as pd
 import torch
 
-from pkgs.commons import input_path
+from pkgs.commons import input_path, model_save_path
 from pkgs.data.harvest import harvest_data_with_interpolate
 from pkgs.data.dataset import SlidingWindowDataset
 
@@ -26,7 +26,7 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
         print("finding best model")
         s = time.time()
 
-        model_path = MODEL_SAVE_PATH + "/" + model_name + ".pt"
+        model_path = model_save_path(num_obs, num_pred) + "/" + model_name + ".pt"
         if not os.path.exists(MODEL_SAVE_PATH):
             os.makedirs(model_path)
 
