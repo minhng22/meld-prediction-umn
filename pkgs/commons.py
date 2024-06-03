@@ -7,6 +7,7 @@ is_original_key_literal = "is_original"
 
 real_data_ratio = 0.9
 generalize_ratio = 0.25
+num_feature_input = 2 # MELD and timestamp
 
 
 def project_dir():
@@ -21,3 +22,11 @@ def figs_path(num_obs, num_pred):
     return exp_path(num_obs, num_pred) + "/figs"
 def model_save_path(num_obs, num_pred):
     return exp_path(num_obs, num_pred) + "/models"
+def box_plot_path(num_obs, num_pred):
+    return figs_path(num_obs, num_pred) + "/box_plot"
+def line_plot_path(num_obs, num_pred):
+    return figs_path(num_obs, num_pred) + "/line_plot"
+def pi_ci_path(num_obs, num_pred):
+    return figs_path(num_obs, num_pred) + "/figs_pi"
+def rmse_by_day_path(num_obs, num_pred):
+    return figs_path(num_obs, num_pred) + "/rmse_by_day"

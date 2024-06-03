@@ -98,7 +98,7 @@ def get_optuna_params(trial: optuna.trial.Trial, model_name, filler=False):
         return {
             "num_layers": trial.suggest_int(num_layers, 1, 4),
             "num_heads": trial.suggest_categorical(num_heads, [2, 3, 4, 5, 6, 8]),
-            "hidden_size": trial.suggest_int(hidden_size, 120, 480, 120),
+            "hidden_size": trial.suggest_int(hidden_size, 120, 480, step = 120),
             "dropout_lstm": trial.suggest_float(dropout_lstm, 0, 0.5),
             "dropout_attn": trial.suggest_float(dropout_attn, 0, 0.5),
         }
@@ -113,20 +113,20 @@ def get_optuna_params(trial: optuna.trial.Trial, model_name, filler=False):
         return {
             "num_layers": trial.suggest_int(num_layers, 1, 6),
             "num_heads": trial.suggest_categorical(num_heads, [2, 3, 4, 5, 6, 8]),
-            "hidden_size": trial.suggest_int(hidden_size, 120, 840, 30),
+            "hidden_size": trial.suggest_int(hidden_size, 120, 840, step = 30),
             "dropout_lstm": trial.suggest_float(dropout_lstm, 0, 0.5),
             "dropout_attn": trial.suggest_float(dropout_attn, 0, 0.5),
         }
     if model_name == "cnn_lstm":
         return {
             "num_layers": trial.suggest_int("num_layers", 1, 4),
-            "hidden_size": trial.suggest_int("hidden_size", 120, 720, 60),
+            "hidden_size": trial.suggest_int("hidden_size", 120, 720, step = 60),
             "dropout_lstm": trial.suggest_float("dropout_lstm", 0, 0.5),
         }
     if model_name == "tcn_lstm":
         return {
             "num_layers": trial.suggest_int("num_layers", 1, 4),
-            "hidden_size": trial.suggest_int("hidden_size", 120, 480, 120),
+            "hidden_size": trial.suggest_int("hidden_size", 120, 480, step = 120),
             "dropout_lstm": trial.suggest_float("dropout_lstm", 0, 0.5),
             "cnn_dropout": trial.suggest_float("cnn_dropout", 0, 0.5),
             "cnn_kernel_size": trial.suggest_int("cnn_kernel_size", 2, 7),
@@ -140,20 +140,20 @@ def get_optuna_params(trial: optuna.trial.Trial, model_name, filler=False):
     if model_name == "lstm_seq_2_seq":
         return {
             "num_layers": trial.suggest_int("num_layers", 1, 4),
-            "hidden_size": trial.suggest_int("hidden_size", 128, 640, 128),
+            "hidden_size": trial.suggest_int("hidden_size", 128, 640, step = 128),
             "dropout_lstm": trial.suggest_float("dropout_lstm", 0, 0.5),
         }
     if model_name == "lstm":
         return {
             "num_layers": trial.suggest_int("num_layers", 1, 4),
-            "hidden_size": trial.suggest_int("hidden_size", 120, 840, 30),
+            "hidden_size": trial.suggest_int("hidden_size", 120, 840, step = 30),
             "dropout_lstm": trial.suggest_float("dropout_lstm", 0, 0.5),
         }
     if model_name == "transformer":
         return {
             "n_head": trial.suggest_int("n_head", 6, 8),
             "num_encoder_layers": trial.suggest_int("num_encoder_layers", 4, 8),
-            "n_head_factor": trial.suggest_int("n_head_factor", 50, 70, 5),
+            "n_head_factor": trial.suggest_int("n_head_factor", 50, 70, step = 5),
             "dropout_pos_encoding": trial.suggest_float("dropout_lstm", 0, 0.5),
             "num_decoder_layers": trial.suggest_int("num_decoder_layers", 4, 8),
             "dropout_transformer": trial.suggest_float("dropout_lstm", 0, 0.5),
@@ -163,7 +163,7 @@ def get_optuna_params(trial: optuna.trial.Trial, model_name, filler=False):
         return {
             "n_head": trial.suggest_int("n_head", 6, 10),
             "num_encoder_layers": trial.suggest_int("num_encoder_layers", 4, 8),
-            "n_head_factor": trial.suggest_int("n_head_factor", 50, 90, 5),
+            "n_head_factor": trial.suggest_int("n_head_factor", 50, 90, step = 5),
             "dropout_pos_encoding": trial.suggest_float("dropout_lstm", 0, 0.5),
             "num_decoder_layers": trial.suggest_int("num_decoder_layers", 4, 8),
             "dropout_transformer": trial.suggest_float("dropout_lstm", 0, 0.5),

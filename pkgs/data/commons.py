@@ -1,6 +1,8 @@
 import math
 import numpy as np
 import pandas as pd
+from sklearn.metrics import mean_squared_error
+
 
 def bottom_patient_by_len_record(d: dict, bottom_ratio):
     keys = list(d.keys())
@@ -71,3 +73,22 @@ def mean_day(df: pd.DataFrame):
             raise Exception("timestamp is not unique for each patient_id")
 
     return df_mean
+
+
+def inverse_scale_ops(ips, ops, sc, num_obs, num_pred):
+    ops = np.reshape(ops, (-1, num_pred))
+    ips = np.reshape(ips, (-1, num_obs))
+
+    tests_ops = np.concatenate((ips, ops), axis=1)
+
+    return sc.inverse_transform(tests_ops)
+
+
+def calculate_rmse_of_time_step(ip, op):
+    rmses = []
+    for i in range(ip.shape[1]):
+        ip_i = ip[:, i]
+        op_i = op[:, i]
+        rmse = np.sqrt(mean_squared_error(ip_i, op_i))
+        rmses.append(round(rmse, 3))
+    return rmses

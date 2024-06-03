@@ -74,3 +74,47 @@ class SlidingWindowDataset(Dataset):
 
     def get_generalize_ip_meld(self):
         return self.generalize_ips_meld
+
+
+def filter_minus_one(data):
+    t = None
+    for i in range(len(data)):
+        d = data[i]
+        if not np.any(d == -1):
+            if t is None:
+                t = np.reshape(d, (1, d.shape[0], d.shape[1]))
+            else:
+                t = np.concatenate((t, np.reshape(d, (1, d.shape[0], d.shape[1]))), axis=0)
+    return t
+
+
+def rand_fill_minus1(melds):
+    n = melds.numel()
+    m = int(round(n * 0.8))
+    indices = np.random.choice(n, m, replace=False)
+    melds = melds.contiguous()
+    melds.flatten()[indices] = -1
+
+    return melds
+
+
+class FillerDataset(Dataset):
+    def __init__(self, dataset: SlidingWindowDataset, num_obs, num_pred):
+        data = dataset.get_original_meld_train()
+        print(f"Original data shape {data.shape}")
+
+        sc = MinMaxScaler((0, 1))
+        data = data[:, :num_obs, :]
+
+        print(f"after extracting observed meld {data.shape}")
+        data = filter_minus_one(data)  # don't use filled meld record
+        print(f"after filter minus 1 {data.shape}")
+
+        data = np.reshape(data, (data.shape[0], data.shape[1] * data.shape[2]))
+        data = sc.fit_transform(data)
+        self.target = np.reshape(data, (data.shape[0], num_obs, 1))  # this is just MELD, so 1 feature
+
+        print(f"target data shape {self.target.shape}")
+
+        self.ips = rand_fill_minus1(torch.from_numpy(self.target))
+        print(f"ips shape {self.ips.shape}")
