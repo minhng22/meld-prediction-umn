@@ -10,6 +10,7 @@ from pkgs.data.dataset import SlidingWindowDataset
 from pkgs.data.harvest import harvest_data_with_interpolate
 from pkgs.experiments.commons import find_better_model, model_eval_and_plot
 from pkgs.experiments.optunas import ex_optuna
+from pkgs.experiments.sklearns import exp_sklearn_model
 
 
 def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_amount, to_run_models,
@@ -17,6 +18,7 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
     batch_size = 256
     device = torch.device("cpu")
     n_trials = 1
+    num_feature_input = 2
 
     print(f"pre-processing data, experimenting on obs {num_obs} pred {num_pred}")
     s = time.time()
@@ -35,6 +37,10 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
 
         print("finding best model")
         s = time.time()
+
+        if model_name in ["evr", "rfr"]:
+            exp_sklearn_model(dataset, model_name, num_obs, num_pred)
+            continue
 
         model_path = model_save_path(num_obs, num_pred) + "/" + model_name + ".pt"
         dl = DataLoader(dataset, batch_size=batch_size, shuffle=True)
@@ -78,4 +84,4 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
 
 if __name__ == "__main__":
     run_exp(5, 2, 0.9, 0.25, "d",
-            ["attention_lstm"], True)
+            ["rfr", "evr"], True)

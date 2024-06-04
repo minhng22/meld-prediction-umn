@@ -1,3 +1,5 @@
+from sklearn.ensemble import ExtraTreesRegressor, RandomForestRegressor
+
 from pkgs.models.cnns import CNNLSTMModel
 from pkgs.models.lstms import AttentionAutoencoderLSTMModel, LSTMModel
 from pkgs.models.tcns import TCNLSTMModel, TCNModel
@@ -60,3 +62,10 @@ def get_model(model_name, s_s, device, num_obs, num_pred):
 
     m.to(device)
     return m
+
+
+def get_sklearn_model(model_name: str):
+    if model_name == "evr":
+        return ExtraTreesRegressor()
+    if model_name == "rfr":
+        return RandomForestRegressor()
