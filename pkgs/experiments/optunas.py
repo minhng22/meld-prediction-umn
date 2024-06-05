@@ -8,16 +8,18 @@ from torch.utils.data import DataLoader
 from pkgs.models.commons import get_model
 
 
-def ex_optuna(train_dataloader: DataLoader, model_name, num_obs, num_pred, n_trials, device):
+def ex_optuna(train_dataloader: DataLoader, model_name, num_obs, num_pred, n_trials, device, num_feature_input, num_feature_output):
     study = optuna.create_study(direction="minimize")
 
     study.optimize(
         lambda trial: optuna_objective(
             trial=trial, train_dataloader=train_dataloader, model_name=model_name,
-            device=device, num_obs=num_obs, num_pred=num_pred
+            device=device, num_obs=num_obs, num_pred=num_pred,
+            num_feature_input=num_feature_input, num_feature_output=num_feature_output
         ),
         n_trials=n_trials,
         gc_after_trial=True,
+
     )
     # Print best hyperparameters and loss
     best_trial = study.best_trial
@@ -29,21 +31,6 @@ def ex_optuna(train_dataloader: DataLoader, model_name, num_obs, num_pred, n_tri
 
 
 def get_optuna_params(trial: optuna.trial.Trial, model_name, filler=False):
-    if model_name == "autocorrelation_lstm":
-        num_layers = "num_layers" if not filler else "num_layers_filler"
-        num_heads = "num_heads" if not filler else "num_heads_filler"
-        hidden_size = "hidden_size" if not filler else "hidden_size_filler"
-        dropout_lstm = "dropout_lstm" if not filler else "dropout_lstm_filler"
-        dropout_attn = "dropout_attn" if not filler else "dropout_attn_filler"
-
-        return {
-            "num_layers": trial.suggest_int(num_layers, 1, 4),
-            "num_heads": trial.suggest_categorical(num_heads, [2, 3, 4, 5, 6, 8]),
-            "hidden_size": trial.suggest_int(hidden_size, 120, 480, step = 120),
-            "dropout_lstm": trial.suggest_float(dropout_lstm, 0, 0.5),
-            "dropout_attn": trial.suggest_float(dropout_attn, 0, 0.5),
-        }
-
     if model_name == "attention_lstm":
         num_layers = "num_layers" if not filler else "num_layers_filler"
         num_heads = "num_heads" if not filler else "num_heads_filler"
@@ -90,39 +77,22 @@ def get_optuna_params(trial: optuna.trial.Trial, model_name, filler=False):
             "hidden_size": trial.suggest_int("hidden_size", 120, 840, step = 30),
             "dropout_lstm": trial.suggest_float("dropout_lstm", 0, 0.5),
         }
-    if model_name == "transformer":
-        return {
-            "n_head": trial.suggest_int("n_head", 6, 8),
-            "num_encoder_layers": trial.suggest_int("num_encoder_layers", 4, 8),
-            "n_head_factor": trial.suggest_int("n_head_factor", 50, 70, step = 5),
-            "dropout_pos_encoding": trial.suggest_float("dropout_lstm", 0, 0.5),
-            "num_decoder_layers": trial.suggest_int("num_decoder_layers", 4, 8),
-            "dropout_transformer": trial.suggest_float("dropout_lstm", 0, 0.5),
-            "activation_fn": trial.suggest_categorical("activation_fn", ["relu", "gelu"]),
-        }
-    if model_name == "transformer_filler":
-        return {
-            "n_head": trial.suggest_int("n_head", 6, 10),
-            "num_encoder_layers": trial.suggest_int("num_encoder_layers", 4, 8),
-            "n_head_factor": trial.suggest_int("n_head_factor", 50, 90, step = 5),
-            "dropout_pos_encoding": trial.suggest_float("dropout_lstm", 0, 0.5),
-            "num_decoder_layers": trial.suggest_int("num_decoder_layers", 4, 8),
-            "dropout_transformer": trial.suggest_float("dropout_lstm", 0, 0.5),
-            "activation_fn": trial.suggest_categorical("activation_fn", ["relu", "gelu"]),
-        }
 
 
 def optuna_objective(
-        trial: optuna.trial.Trial, train_dataloader: DataLoader, model_name, device, num_obs, num_pred
+        trial: optuna.trial.Trial, train_dataloader: DataLoader, model_name,
+        device, num_obs, num_pred, num_feature_input, num_feature_output
 ):
     learning_rate = 0.1
     gamma_rate = 0.9
-    num_epoch = 5
+    num_epoch = 1
     patience = 15
 
     params = get_optuna_params(trial, model_name)
     weight_decay = trial.suggest_float("weight_decay", 1e-5, 1e-3, log=True)
-    model = get_model(model_name=model_name, s_s=params, device=device, num_obs=num_obs, num_pred=num_pred)
+    model = get_model(
+        model_name=model_name, s_s=params, device=device, num_obs=num_obs,
+        num_pred=num_pred, num_feature_input=num_feature_input, num_feature_output=num_feature_output)
 
     # Define loss function and optimizer
     trial_loss = float("inf")

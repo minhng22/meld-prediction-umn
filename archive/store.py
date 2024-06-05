@@ -98,7 +98,7 @@ def get_optuna_params(trial: optuna.trial.Trial, model_name, filler=False):
         return {
             "num_layers": trial.suggest_int(num_layers, 1, 4),
             "num_heads": trial.suggest_categorical(num_heads, [2, 3, 4, 5, 6, 8]),
-            "hidden_size": trial.suggest_int(hidden_size, 120, 480, step = 120),
+            "hidden_size": trial.suggest_int(hidden_size, 120, 480, step=120),
             "dropout_lstm": trial.suggest_float(dropout_lstm, 0, 0.5),
             "dropout_attn": trial.suggest_float(dropout_attn, 0, 0.5),
         }
@@ -113,20 +113,20 @@ def get_optuna_params(trial: optuna.trial.Trial, model_name, filler=False):
         return {
             "num_layers": trial.suggest_int(num_layers, 1, 6),
             "num_heads": trial.suggest_categorical(num_heads, [2, 3, 4, 5, 6, 8]),
-            "hidden_size": trial.suggest_int(hidden_size, 120, 840, step = 30),
+            "hidden_size": trial.suggest_int(hidden_size, 120, 840, step=30),
             "dropout_lstm": trial.suggest_float(dropout_lstm, 0, 0.5),
             "dropout_attn": trial.suggest_float(dropout_attn, 0, 0.5),
         }
     if model_name == "cnn_lstm":
         return {
             "num_layers": trial.suggest_int("num_layers", 1, 4),
-            "hidden_size": trial.suggest_int("hidden_size", 120, 720, step = 60),
+            "hidden_size": trial.suggest_int("hidden_size", 120, 720, step=60),
             "dropout_lstm": trial.suggest_float("dropout_lstm", 0, 0.5),
         }
     if model_name == "tcn_lstm":
         return {
             "num_layers": trial.suggest_int("num_layers", 1, 4),
-            "hidden_size": trial.suggest_int("hidden_size", 120, 480, step = 120),
+            "hidden_size": trial.suggest_int("hidden_size", 120, 480, step=120),
             "dropout_lstm": trial.suggest_float("dropout_lstm", 0, 0.5),
             "cnn_dropout": trial.suggest_float("cnn_dropout", 0, 0.5),
             "cnn_kernel_size": trial.suggest_int("cnn_kernel_size", 2, 7),
@@ -140,20 +140,20 @@ def get_optuna_params(trial: optuna.trial.Trial, model_name, filler=False):
     if model_name == "lstm_seq_2_seq":
         return {
             "num_layers": trial.suggest_int("num_layers", 1, 4),
-            "hidden_size": trial.suggest_int("hidden_size", 128, 640, step = 128),
+            "hidden_size": trial.suggest_int("hidden_size", 128, 640, step=128),
             "dropout_lstm": trial.suggest_float("dropout_lstm", 0, 0.5),
         }
     if model_name == "lstm":
         return {
             "num_layers": trial.suggest_int("num_layers", 1, 4),
-            "hidden_size": trial.suggest_int("hidden_size", 120, 840, step = 30),
+            "hidden_size": trial.suggest_int("hidden_size", 120, 840, step=30),
             "dropout_lstm": trial.suggest_float("dropout_lstm", 0, 0.5),
         }
     if model_name == "transformer":
         return {
             "n_head": trial.suggest_int("n_head", 6, 8),
             "num_encoder_layers": trial.suggest_int("num_encoder_layers", 4, 8),
-            "n_head_factor": trial.suggest_int("n_head_factor", 50, 70, step = 5),
+            "n_head_factor": trial.suggest_int("n_head_factor", 50, 70, step=5),
             "dropout_pos_encoding": trial.suggest_float("dropout_lstm", 0, 0.5),
             "num_decoder_layers": trial.suggest_int("num_decoder_layers", 4, 8),
             "dropout_transformer": trial.suggest_float("dropout_lstm", 0, 0.5),
@@ -163,7 +163,7 @@ def get_optuna_params(trial: optuna.trial.Trial, model_name, filler=False):
         return {
             "n_head": trial.suggest_int("n_head", 6, 10),
             "num_encoder_layers": trial.suggest_int("num_encoder_layers", 4, 8),
-            "n_head_factor": trial.suggest_int("n_head_factor", 50, 90, step = 5),
+            "n_head_factor": trial.suggest_int("n_head_factor", 50, 90, step=5),
             "dropout_pos_encoding": trial.suggest_float("dropout_lstm", 0, 0.5),
             "num_decoder_layers": trial.suggest_int("num_decoder_layers", 4, 8),
             "dropout_transformer": trial.suggest_float("dropout_lstm", 0, 0.5),
@@ -251,7 +251,7 @@ def get_model(model_name, s_s, filler=False):
 class LinearModel(Module):
     def __init__(self):
         super(LinearModel, self).__init__()
-        self.fc = Linear(3, 1) # day,month,year to meld
+        self.fc = Linear(3, 1)  # day,month,year to meld
 
     def forward(self, x):
         x = self.fc(x)
@@ -366,8 +366,8 @@ class TCNModel(Module):
 
         def calculate_output_length(length_in, kernel_size, stride, padding, dilation):
             return (
-                           length_in + 2 * padding - dilation * (kernel_size - 1) - 1
-                   ) // stride + 1
+                    length_in + 2 * padding - dilation * (kernel_size - 1) - 1
+            ) // stride + 1
 
         cnn_channels = []
         for i in range(tcn_num_layers):
@@ -439,8 +439,8 @@ class TCNLSTMModel(Module):
 
         def calculate_output_length(length_in, kernel_size, stride, padding, dilation):
             return (
-                           length_in + 2 * padding - dilation * (kernel_size - 1) - 1
-                   ) // stride + 1
+                    length_in + 2 * padding - dilation * (kernel_size - 1) - 1
+            ) // stride + 1
 
         self.hidden_size = hidden_size
 
@@ -1125,14 +1125,14 @@ def exp_linear_model(df):
         np.reshape(day_arr, (day_arr.shape[0], 1)),
         np.reshape(month_arr, (month_arr.shape[0], 1)),
         np.reshape(year_arr, (year_arr.shape[0], 1)),
-    ), axis = 1)
+    ), axis=1)
     meld = np.reshape(meld, (meld.shape[0], 1))
     print(f"meld.shape T.shape {meld.shape} {T.shape}")
     print(f"meld_train nan {np.any(np.isnan(meld))} {np.any(np.isnan(T))}")
 
     break_i = int(meld.shape[0] * 0.8)
     meld_train, meld_test = meld[:break_i, :], meld[:break_i, :]
-    time_train, time_test =  T[:break_i, :], T[:break_i, :]
+    time_train, time_test = T[:break_i, :], T[:break_i, :]
 
     model_name = "linear"
     model_path = MODEL_SAVE_PATH_LINEAR + "/" + model_name + ".pt"
@@ -1163,7 +1163,8 @@ def exp_linear_model(df):
 
     train_meld_pred = model(torch.Tensor(time_train)).detach().numpy()
     print(f"train_meld_pred {train_meld_pred.shape} {meld_train.shape}")
-    print(f"meld_train nan {np.any(np.isnan(train_meld_pred))} {np.any(np.isnan(meld_train))}")
+    print(
+        f"check if any data point in meld_train is n/a {np.any(np.isnan(train_meld_pred))} {np.any(np.isnan(meld_train))}")
     plot_name_train = f"{model_name} R-square :{round(r2_score(train_meld_pred, meld_train), 3)} RMSE {round(mean_squared_error(train_meld_pred, meld_train, squared=False), 3)}"
 
     plot(train_meld_pred, meld_train, plot_name_train, "train")
@@ -1173,6 +1174,7 @@ def exp_linear_model(df):
     p_name = f"{model_name} R-square :{round(r2_score(test_meld_pred, meld_test), 3)} RMSE {round(mean_squared_error(test_meld_pred, meld_test, squared=False), 3)}"
 
     plot(test_meld_pred, meld_test, p_name, "test")
+
 
 def exp_xgboost_model(dataset: SlidingWindowDataset, model_name: str):
     s = time.time()

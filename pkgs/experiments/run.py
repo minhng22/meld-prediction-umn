@@ -9,8 +9,10 @@ from pkgs.commons import input_path, model_save_path
 from pkgs.data.dataset import SlidingWindowDataset
 from pkgs.data.harvest import harvest_data_with_interpolate
 from pkgs.experiments.commons import find_better_model, model_eval_and_plot
+from pkgs.experiments.linears import exp_linear_model
 from pkgs.experiments.optunas import ex_optuna
 from pkgs.experiments.sklearns import exp_sklearn_model
+from pkgs.experiments.xgboosts import exp_xgboost_model
 
 
 def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_amount, to_run_models,
@@ -18,7 +20,7 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
     batch_size = 256
     device = torch.device("cpu")
     n_trials = 1
-    num_feature_input = 2
+    num_feature_input, num_feature_output = 2, 1 # MELD and timestamp
 
     print(f"pre-processing data, experimenting on obs {num_obs} pred {num_pred}")
     s = time.time()
@@ -39,7 +41,15 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
         s = time.time()
 
         if model_name in ["evr", "rfr"]:
-            exp_sklearn_model(dataset, model_name, num_obs, num_pred)
+            exp_sklearn_model(dataset, model_name, num_obs, num_pred, num_feature_input, num_feature_output)
+            continue
+
+        if model_name == "xgboost":
+            exp_xgboost_model(dataset, model_name, num_obs, num_pred, num_feature_input, num_feature_output)
+            continue
+
+        if model_name == "linear":
+            exp_linear_model(df, num_obs, num_pred)
             continue
 
         model_path = model_save_path(num_obs, num_pred) + "/" + model_name + ".pt"
@@ -54,14 +64,14 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
                 best_model = find_better_model(
                     torch.load(model_path), ex_optuna(
                         train_dataloader=dl, model_name=model_name, num_obs=num_obs, num_pred=num_pred,
-                        n_trials=n_trials, device=device
+                        n_trials=n_trials, device=device, num_feature_output=num_feature_output, num_feature_input=num_feature_input
                     ), test_ips, original_meld_test_set, dataset.meld_sc, device, num_obs, num_pred)
             else:
                 best_model = torch.load(model_path)
         else:
             best_model = ex_optuna(
                 train_dataloader=dl, model_name=model_name, num_obs=num_obs, num_pred=num_pred, n_trials=n_trials,
-                device=device)
+                device=device, num_feature_input=num_feature_input, num_feature_output=num_feature_output)
 
         print(f"evaluate best model of {model_name}")
         print(f"model params: {best_model}")
@@ -84,4 +94,4 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
 
 if __name__ == "__main__":
     run_exp(5, 2, 0.9, 0.25, "d",
-            ["rfr", "evr"], True)
+            ["linear"], True)

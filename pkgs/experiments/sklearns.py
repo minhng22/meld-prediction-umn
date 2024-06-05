@@ -14,10 +14,8 @@ from pkgs.commons import model_save_path
 from pkgs.models.commons import get_sklearn_model
 
 
-def exp_sklearn_model(dataset: SlidingWindowDataset, model_name: str, num_obs, num_pred):
+def exp_sklearn_model(dataset: SlidingWindowDataset, model_name: str, num_obs, num_pred, num_feature_input, num_feature_output):
     s = time.time()
-    num_feature_input = 2
-    num_feature_output = 1
 
     model_path = model_save_path(num_obs, num_pred) + "/" + model_name + ".pkl"
 

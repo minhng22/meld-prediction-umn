@@ -2,12 +2,12 @@ from torch.nn import LSTM, Linear, Conv1d, ReLU, MaxPool1d, Module
 
 
 class CNNLSTMModel(Module):
-    def __init__(self, num_layers, hidden_size, dropout_lstm, num_obs, num_pred):
+    def __init__(self, num_layers, hidden_size, dropout_lstm, num_obs, num_pred, num_feature_input, num_feature_output):
         super(CNNLSTMModel, self).__init__()
         self.hidden_size = hidden_size
 
-        self.num_feature_ip = 2
-        self.num_feature_op = 1
+        self.num_feature_ip = num_feature_input
+        self.num_feature_op = num_feature_output
 
         # LSTM layers
         self.encoder_lstm = LSTM(

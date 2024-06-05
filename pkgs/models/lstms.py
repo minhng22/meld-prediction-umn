@@ -2,11 +2,19 @@ import torch
 from torch.nn import Module
 from torch.nn import LSTM, MultiheadAttention, Linear
 
+
+def find_hidden(hidden, num_head):
+    h = hidden
+    while h % num_head != 0:
+        h += 1
+    return h
+
+
 class AttentionAutoencoderLSTMModel(Module):
-    def __init__(self, num_layers, num_heads, hidden_size, dropout_lstm, dropout_attn, num_pred, device):
+    def __init__(self, num_layers, num_heads, hidden_size, dropout_lstm, dropout_attn, num_pred, device, num_feature_ip):
         super(AttentionAutoencoderLSTMModel, self).__init__()
-        self.hidden_size = self.find_hidden(hidden_size, num_heads)
-        self.num_feature_ip = 2 # MELD and timestamp
+        self.hidden_size = find_hidden(hidden_size, num_heads)
+        self.num_feature_ip = num_feature_ip # MELD and timestamp
 
         # LSTM layers
         self.encoder_lstm = LSTM(
@@ -34,12 +42,6 @@ class AttentionAutoencoderLSTMModel(Module):
         self.num_feature_decoder_lstm = num_pred
         self.device = device
 
-    def find_hidden(self, hidden, num_head):
-        h = hidden
-        while h % num_head != 0:
-            h += 1
-        return h
-
     def forward(self, x):
         _, (ec_h, ec_c) = self.encoder_lstm(x)
 
@@ -53,10 +55,10 @@ class AttentionAutoencoderLSTMModel(Module):
 
 
 class LSTMModel(Module):
-    def __init__(self, num_layers, hidden_size, drop_out, num_obs, num_pred) -> None:
+    def __init__(self, num_layers, hidden_size, drop_out, num_obs, num_pred, num_feature_ip, num_feature_op) -> None:
         super(LSTMModel, self).__init__()
-        self.num_feature_ip = 2
-        self.num_feature_op = 1
+        self.num_feature_ip = num_feature_ip
+        self.num_feature_op = num_feature_op
         self.num_obs = num_obs
         self.num_pred = num_pred
 

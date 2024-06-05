@@ -5,18 +5,17 @@ from torch import nn
 from torch.nn import LSTM, Linear, Module
 
 
+def calculate_output_length(length_in, kernel_size, stride, padding, dilation):
+    return (length_in + 2 * padding - dilation * (kernel_size - 1) - 1) // stride + 1
+
+
 class TCNModel(Module):
     # This model is less accurate than CNNLSTMModel. Abandoned.
     def __init__( 
-            self, cnn_dropout, tcn_num_layers, num_obs, num_pred
+            self, cnn_dropout, tcn_num_layers, num_obs, num_pred, num_feature_output
     ):
         super(TCNModel, self).__init__()
-        self.num_feature = 1
-
-        def calculate_output_length(length_in, kernel_size, stride, padding, dilation):
-            return (
-                           length_in + 2 * padding - dilation * (kernel_size - 1) - 1
-                   ) // stride + 1
+        self.num_feature = num_feature_output
 
         cnn_channels = []
         for i in range(tcn_num_layers):
@@ -73,10 +72,10 @@ class TCNModel(Module):
 class TCNLSTMModel(Module):
     # This model is less accurate than CNNLSTMModel. Abandoned.
     def __init__(
-            self, num_layers, hidden_size, dropout_lstm, cnn_dropout, tcn_num_layers, num_obs, num_pred
+            self, num_layers, hidden_size, dropout_lstm, cnn_dropout, tcn_num_layers, num_obs, num_pred, num_feature_output
     ):
         super(TCNLSTMModel, self).__init__()
-        self.num_feature = 1
+        self.num_feature = num_feature_output
         self.hidden_size = hidden_size
 
         def calculate_output_length(length_in, kernel_size_l, stride_l, padding_l, dilation_l):
