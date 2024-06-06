@@ -127,7 +127,7 @@ class TCNLSTMModel(Module):
 
         # LSTM layers
         self.encoder_lstm = LSTM(
-            input_size=self.cnn_channels[-1],
+            input_size=output_len,
             hidden_size=hidden_size,
             num_layers=num_layers,
             batch_first=True,
@@ -139,7 +139,6 @@ class TCNLSTMModel(Module):
 
     def forward(self, x: torch.Tensor):
         tcn_op = self.tcn(x)
-        print(tcn_op.shape)
         ec_op, (_, _) = self.encoder_lstm(tcn_op)
 
         return self.fc(ec_op)

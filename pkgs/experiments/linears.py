@@ -15,10 +15,8 @@ from pkgs.models.linears import LinearModel
 
 def plot_density(y_true, y_pred, num_obs, num_pred, model_name, plot_title, ext):
     plt.figure(figsize=(10, 6))
-    plt.hexbin(y_true, y_pred, gridsize=50, cmap='Blues', mincnt=1)
-    plt.colorbar(label='Counts')
-    plt.xlabel('Actual Values')
-    plt.ylabel('Predicted Values')
+
+    sns.jointplot(x=y_true, y=y_pred, kind="hex", color="#4CB391")
     plt.title(plot_title)
 
     plt.savefig(f"{linear_plot_path(num_obs, num_pred)}/{ext}_{model_name}.png", bbox_inches="tight")
