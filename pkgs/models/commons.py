@@ -43,6 +43,7 @@ def get_model(model_name, s_s, device, num_obs, num_pred, num_feature_input, num
             num_obs=num_obs,
             num_pred=num_pred,
             num_feature_output=num_feature_output,
+            num_feature_input=num_feature_input,
         )
     elif model_name == "tcn":
         m = TCNModel(
@@ -50,6 +51,7 @@ def get_model(model_name, s_s, device, num_obs, num_pred, num_feature_input, num
             tcn_num_layers=s_s["tcn_num_layers"],
             num_obs=num_obs,
             num_pred=num_pred,
+            num_feature_input=num_feature_input,
             num_feature_output=num_feature_output,
         )
     elif model_name == "lstm":

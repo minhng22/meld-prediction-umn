@@ -5,7 +5,7 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 
-from pkgs.commons import input_path, model_save_path
+from pkgs.commons import input_path, model_save_path, models_to_run
 from pkgs.data.dataset import SlidingWindowDataset
 from pkgs.data.harvest import harvest_data_with_interpolate
 from pkgs.experiments.commons import find_better_model, model_eval_and_plot
@@ -93,5 +93,5 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
 
 
 if __name__ == "__main__":
-    run_exp(5, 2, 0.9, 0.25, "d",
-            ["linear"], True)
+    run_exp(5, 3, 0.9, 0.25, "d",
+            models_to_run, True)

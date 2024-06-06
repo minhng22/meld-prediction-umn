@@ -12,24 +12,23 @@ def calculate_output_length(length_in, kernel_size, stride, padding, dilation):
 class TCNModel(Module):
     # This model is less accurate than CNNLSTMModel. Abandoned.
     def __init__( 
-            self, cnn_dropout, tcn_num_layers, num_obs, num_pred, num_feature_output
+            self, cnn_dropout, tcn_num_layers, num_obs, num_pred, num_feature_input, num_feature_output
     ):
         super(TCNModel, self).__init__()
-        self.num_feature = num_feature_output
 
-        cnn_channels = []
+        self.cnn_channels = []
         for i in range(tcn_num_layers):
             if i == tcn_num_layers - 1:
-                cnn_channels.append(num_pred)
+                self.cnn_channels.append(num_pred)
             else:
-                cnn_channels.append(num_pred * random.randint(2, 10))
+                self.cnn_channels.append(num_pred * random.randint(2, 10))
 
         cnn_layers = []
-        output_length = self.num_feature
+        output_len = num_feature_input
 
-        for i in range(len(cnn_channels)):
-            in_channels = num_obs if i == 0 else cnn_channels[i - 1]
-            out_channels = cnn_channels[i]
+        for i in range(len(self.cnn_channels)):
+            in_channels = num_obs if i == 0 else self.cnn_channels[i - 1]
+            out_channels = self.cnn_channels[i]
 
             # These gives best performance in cnnlstm model.
             padding, dilation, kernel_size, stride = 0, 1, 1, 1
@@ -50,19 +49,21 @@ class TCNModel(Module):
                              stride=stride, dilation=dilation),
             ]
 
-            # Calc output length
-            output_length = calculate_output_length(
-                output_length, kernel_size, stride, padding, dilation
+            # Calculate output length of Conv1d
+            output_len = calculate_output_length(
+                output_len, kernel_size, stride, padding, dilation
             )
-            # Max pooling output length
-            output_length = calculate_output_length(
-                output_length, kernel_size, stride, 0, dilation
+
+            # Calculate output length of MaxPool1d
+            output_len = calculate_output_length(
+                output_len, kernel_size, stride, 0, dilation
             )
 
         self.tcn = nn.Sequential(*cnn_layers)
 
         # Output layer
-        self.fc = Linear(cnn_channels[-1], self.num_feature)
+        self.fc = Linear(output_len, num_feature_output)
+        self.output_len = output_len
 
     def forward(self, x: torch.Tensor):
         tcn_op = self.tcn(x)
@@ -72,28 +73,24 @@ class TCNModel(Module):
 class TCNLSTMModel(Module):
     # This model is less accurate than CNNLSTMModel. Abandoned.
     def __init__(
-            self, num_layers, hidden_size, dropout_lstm, cnn_dropout, tcn_num_layers, num_obs, num_pred, num_feature_output
+            self, num_layers, hidden_size, dropout_lstm, cnn_dropout, tcn_num_layers, num_obs, num_pred, num_feature_input, num_feature_output
     ):
         super(TCNLSTMModel, self).__init__()
-        self.num_feature = num_feature_output
         self.hidden_size = hidden_size
 
-        def calculate_output_length(length_in, kernel_size_l, stride_l, padding_l, dilation_l):
-            return (length_in + 2 * padding_l - dilation_l * (kernel_size_l - 1) - 1) // stride_l + 1
-
-        cnn_channels = []
+        self.cnn_channels = []
         for i in range(tcn_num_layers):
             if i == tcn_num_layers - 1:
-                cnn_channels.append(num_pred)
+                self.cnn_channels.append(num_pred)
             else:
-                cnn_channels.append(num_pred * random.randint(2, 10))
+                self.cnn_channels.append(num_pred * random.randint(2, 10))
 
         cnn_layers = []
-        output_length = self.num_feature
+        output_len = num_feature_input
 
-        for i in range(len(cnn_channels)):
-            in_channels = num_obs if i == 0 else cnn_channels[i - 1]
-            out_channels = cnn_channels[i]
+        for i in range(len(self.cnn_channels)):
+            in_channels = num_obs if i == 0 else self.cnn_channels[i - 1]
+            out_channels = self.cnn_channels[i]
 
             # These gives best performance in cnnlstm model.
             padding = 0
@@ -117,20 +114,20 @@ class TCNLSTMModel(Module):
                              stride=stride, dilation=dilation),
             ]
 
-            # Calc output length
-            output_length = calculate_output_length(
-                output_length, kernel_size, stride, padding, dilation
+            # Calculate output length of Conv1d
+            output_len = calculate_output_length(
+                output_len, kernel_size, stride, padding, dilation
             )
-            # Max pooling output length
-            output_length = calculate_output_length(
-                output_length, kernel_size, stride, 0, dilation
+            # Calculate output length of MaxPool1d
+            output_len = calculate_output_length(
+                output_len, kernel_size, stride, 0, dilation
             )
 
         self.tcn = nn.Sequential(*cnn_layers)
 
         # LSTM layers
         self.encoder_lstm = LSTM(
-            input_size=cnn_channels[-1],
+            input_size=self.cnn_channels[-1],
             hidden_size=hidden_size,
             num_layers=num_layers,
             batch_first=True,
@@ -138,10 +135,11 @@ class TCNLSTMModel(Module):
         )
 
         # Output layer
-        self.fc = Linear(hidden_size, self.num_feature)
+        self.fc = Linear(hidden_size, num_feature_output)
 
     def forward(self, x: torch.Tensor):
         tcn_op = self.tcn(x)
+        print(tcn_op.shape)
         ec_op, (_, _) = self.encoder_lstm(tcn_op)
 
         return self.fc(ec_op)

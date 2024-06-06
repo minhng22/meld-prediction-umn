@@ -83,7 +83,7 @@ def run_sklearn_model(dataset: SlidingWindowDataset, model_name: str, num_obs, n
     params = get_sklearn_model_params(model_name)
     model = get_sklearn_model(model_name)
 
-    grid_search = HalvingGridSearchCV(model, params, cv=10)
+    grid_search = HalvingGridSearchCV(model, params)
 
     train_ips = np.reshape(dataset.get_train_ips(),
                            (-1, num_obs * num_feature_input))

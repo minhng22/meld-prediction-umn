@@ -7,10 +7,22 @@ import torch
 from matplotlib import pyplot as plt
 from sklearn.metrics import r2_score, mean_squared_error
 from torch import nn, optim
+import seaborn as sns
 
 from pkgs.commons import model_save_path, linear_plot_path
 from pkgs.models.linears import LinearModel
 
+
+def plot_density(y_true, y_pred, num_obs, num_pred, model_name, plot_title, ext):
+    plt.figure(figsize=(10, 6))
+    plt.hexbin(y_true, y_pred, gridsize=50, cmap='Blues', mincnt=1)
+    plt.colorbar(label='Counts')
+    plt.xlabel('Actual Values')
+    plt.ylabel('Predicted Values')
+    plt.title(plot_title)
+
+    plt.savefig(f"{linear_plot_path(num_obs, num_pred)}/{ext}_{model_name}.png", bbox_inches="tight")
+    plt.clf()
 
 def exp_linear_model(df, num_obs, num_pred):
     s = time.time()
@@ -48,30 +60,18 @@ def exp_linear_model(df, num_obs, num_pred):
         model = run_linear_model(time_train, meld_train)
         torch.save(model, model_path)
 
-    def plot(pred, real, plot_name, ext):
-        plt.scatter(real, pred)
-
-        plt.legend(bbox_to_anchor=(1.05, 1.0), loc="upper left")
-
-        plt.title(plot_name)
-        plt.xlabel("real MELD")
-        plt.ylabel("predict MELD")
-
-        plt.savefig(f"{linear_plot_path(num_obs, num_pred)}/{ext}_{model_name}", bbox_inches="tight")
-        plt.clf()
-
     train_meld_pred = model(torch.Tensor(time_train)).detach().numpy()
     print(f"train_meld_pred {train_meld_pred.shape} {meld_train.shape}")
     print(f"meld_train nan {np.any(np.isnan(train_meld_pred))} {np.any(np.isnan(meld_train))}")
-    plot_name_train = f"{model_name} R-square :{round(r2_score(train_meld_pred, meld_train), 3)} RMSE {round(mean_squared_error(train_meld_pred, meld_train, squared=False), 3)}"
+    plot_title_train = f"{model_name} R-square :{round(r2_score(train_meld_pred, meld_train), 3)} RMSE {round(mean_squared_error(train_meld_pred, meld_train, squared=False), 3)}"
 
-    plot(train_meld_pred, meld_train, plot_name_train, "train")
+    plot_density(train_meld_pred, meld_train, num_obs, num_pred, model_name, plot_title_train, "train")
 
     test_meld_pred = model(torch.Tensor(time_test)).detach().numpy()
     print(f"test_meld_pred {test_meld_pred.shape} {meld_test.shape}")
-    p_name = f"{model_name} R-square :{round(r2_score(test_meld_pred, meld_test), 3)} RMSE {round(mean_squared_error(test_meld_pred, meld_test, squared=False), 3)}"
+    plot_title_test = f"{model_name} R-square :{round(r2_score(test_meld_pred, meld_test), 3)} RMSE {round(mean_squared_error(test_meld_pred, meld_test, squared=False), 3)}"
 
-    plot(test_meld_pred, meld_test, p_name, "test")
+    plot_density(test_meld_pred, meld_test, num_obs, num_pred, model_name, plot_title_test, "test")
 
     print(f"Model experiment takes {time.time() - s} seconds or {int((time.time() - s) / 60)} minutes")
 
@@ -84,8 +84,8 @@ def run_linear_model(ip, op):
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
     # Training loop for 5 trials
-    num_trials = 5
-    num_epochs = 100
+    num_trials = 1
+    num_epochs = 1
     batch_size = 10
     best_loss = float('inf')
     best_model = None
