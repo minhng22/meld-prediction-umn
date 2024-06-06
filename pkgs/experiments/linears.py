@@ -14,7 +14,6 @@ from pkgs.models.linears import LinearModel
 
 def exp_linear_model(df, num_obs, num_pred):
     s = time.time()
-    predict_color = "crimson"
 
     df = df.dropna(subset=['timestamp', 'score'])
     df['timestamp'] = pd.to_datetime(df['timestamp'])
@@ -51,7 +50,6 @@ def exp_linear_model(df, num_obs, num_pred):
 
     def plot(pred, real, plot_name, ext):
         plt.scatter(real, pred)
-        plt.plot(real, real, c=predict_color)
 
         plt.legend(bbox_to_anchor=(1.05, 1.0), loc="upper left")
 
