@@ -67,13 +67,13 @@ def exp_linear_model(df, num_obs, num_pred):
     print(f"meld_train nan {np.any(np.isnan(train_meld_pred))} {np.any(np.isnan(meld_train))}")
     plot_title_train = f"{model_name} R-square :{round(r2_score(train_meld_pred, meld_train), 3)} RMSE {round(mean_squared_error(train_meld_pred, meld_train, squared=False), 3)}"
 
-    plot_density(train_meld_pred, meld_train, num_obs, num_pred, model_name, plot_title_train, "train")
+    plot_density(meld_train, train_meld_pred, num_obs, num_pred, model_name, plot_title_train, "train")
 
     test_meld_pred = model(torch.Tensor(time_test)).detach().numpy()
     print(f"test_meld_pred {test_meld_pred.shape} {meld_test.shape}")
     plot_title_test = f"{model_name} R-square :{round(r2_score(test_meld_pred, meld_test), 3)} RMSE {round(mean_squared_error(test_meld_pred, meld_test, squared=False), 3)}"
 
-    plot_density(test_meld_pred, meld_test, num_obs, num_pred, model_name, plot_title_test, "test")
+    plot_density(meld_test, test_meld_pred, num_obs, num_pred, model_name, plot_title_test, "test")
 
     print(f"Model experiment takes {time.time() - s} seconds or {int((time.time() - s) / 60)} minutes")
 
