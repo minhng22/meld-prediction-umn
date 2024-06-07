@@ -11,21 +11,29 @@ from pkgs.data.commons import inverse_scale_ops
 from pkgs.data.dataset import SlidingWindowDataset
 from pkgs.data.plot import plot_box, plot_line, analyze_timestep_rmse, analyze_ci_and_pi
 from pkgs.commons import model_save_path
+from pkgs.experiments.commons import sklearn_find_better_model
 from pkgs.models.commons import get_sklearn_model
 
 
-def exp_sklearn_model(dataset: SlidingWindowDataset, model_name: str, num_obs, num_pred, num_feature_input, num_feature_output):
+def exp_sklearn_model(dataset: SlidingWindowDataset, model_name: str, num_obs, num_pred, num_feature_input, num_feature_output, compare_with_existing_best_model):
     s = time.time()
 
     model_path = model_save_path(num_obs, num_pred) + "/" + model_name + ".pkl"
 
     if os.path.exists(model_path):
         best_model = joblib.load(model_path)
+        if compare_with_existing_best_model:
+            best_model = sklearn_find_better_model(
+                test_ips=dataset.get_test_ips(), test_ip_meld=dataset.get_test_ip_meld(),
+                original_meld_test=dataset.get_original_meld_test(),
+                scaler=dataset.meld_sc, num_obs=num_obs, num_pred=num_pred, num_feature_input=num_feature_input,
+                model_a=run_sklearn_model(dataset, model_name, num_obs, num_pred, num_feature_input, num_feature_output),
+                model_b=best_model, model_name=model_name)
     else:
-        if not os.path.exists(model_save_path(num_obs, num_pred)):
-            os.makedirs(model_save_path(num_obs, num_pred))
         best_model = run_sklearn_model(dataset, model_name, num_obs, num_pred, num_feature_input, num_feature_output)
-        joblib.dump(best_model, model_path)
+
+
+    joblib.dump(best_model, model_path)
 
     print(f"best model: {best_model}")
 
