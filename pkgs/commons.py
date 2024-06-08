@@ -28,8 +28,8 @@ def box_plot_path(num_obs, num_pred):
     return figs_path(num_obs, num_pred) + "/box_plot"
 def line_plot_path(num_obs, num_pred):
     return figs_path(num_obs, num_pred) + "/line_plot"
-def linear_plot_path(num_obs, num_pred):
-    return figs_path(num_obs, num_pred) + "/linear_plot"
+def linear_plot_path():
+    return project_dir() + f"/experiments_generated_data/linear_plot"
 def pi_ci_path(num_obs, num_pred):
     return figs_path(num_obs, num_pred) + "/figs_pi"
 def rmse_by_day_path(num_obs, num_pred):
