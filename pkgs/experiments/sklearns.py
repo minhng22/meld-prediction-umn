@@ -92,6 +92,14 @@ def run_sklearn_model(dataset: SlidingWindowDataset, model_name: str, num_obs, n
     model = get_sklearn_model(model_name)
 
     grid_search = HalvingGridSearchCV(model, params)
+    # try RandomizedSearchCV(
+    #         estimator=model,
+    #         param_distributions=params,
+    #         n_iter=10,
+    #         cv=5,
+    #         verbose=2,
+    #         random_state=42,
+    #     ) to run faster
 
     train_ips = np.reshape(dataset.get_train_ips(),
                            (-1, num_obs * num_feature_input))
