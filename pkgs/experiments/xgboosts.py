@@ -23,7 +23,12 @@ def run_xgboost_model(dataset: SlidingWindowDataset, num_obs, num_pred, num_feat
     }
     model = XGBRegressor()
 
-    grid_search = HalvingGridSearchCV(model, param_grid, cv=10)
+    grid_search = HalvingGridSearchCV(
+        estimator=model,
+        param_grid=param_grid,
+        factor=10,
+        cv=2
+    )
 
     train_ips = np.reshape(dataset.get_train_ips(), (-1, num_obs * num_feature_input))
     train_targets = np.reshape(dataset.get_target_ips(), (-1, num_pred * num_feature_output))
