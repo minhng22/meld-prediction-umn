@@ -1,11 +1,13 @@
 import os
 import time
 
+import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 
-from pkgs.commons import input_path, model_save_path, models_to_run
+from pkgs.commons import input_path, model_save_path, models_to_run, preprocessed_train_set_data_path, \
+    preprocessed_test_set_data_path, preprocessed_generalize_set_data_path
 from pkgs.data.dataset import SlidingWindowDataset
 from pkgs.data.harvest import harvest_data_with_interpolate
 from pkgs.experiments.commons import rnn_find_better_model, rnn_model_eval_and_plot
@@ -26,8 +28,17 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
     s = time.time()
     df = pd.read_csv(input_path)
 
-    exp_trains, exp_tests, exp_generalizes = harvest_data_with_interpolate(
-        df, num_obs + num_pred, real_data_ratio, generalize_ratio, interpolate_amount)
+    if not os.path.exists(preprocessed_train_set_data_path):
+        print("getting new data")
+        exp_trains, exp_tests, exp_generalizes = harvest_data_with_interpolate(
+            df, num_obs + num_pred, real_data_ratio, generalize_ratio, interpolate_amount)
+        np.save(preprocessed_train_set_data_path, exp_trains)
+        np.save(preprocessed_test_set_data_path, exp_tests)
+        np.save(preprocessed_generalize_set_data_path, exp_generalizes)
+    else:
+        exp_trains = np.load(preprocessed_train_set_data_path)
+        exp_tests = np.load(preprocessed_test_set_data_path)
+        exp_generalizes = np.load(preprocessed_generalize_set_data_path)
 
     print(f"preprocessing data takes {time.time() - s} seconds")
 
