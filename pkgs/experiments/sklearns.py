@@ -29,11 +29,10 @@ def exp_sklearn_model(dataset: SlidingWindowDataset, model_name: str, num_obs, n
                 scaler=dataset.meld_sc, num_obs=num_obs, num_pred=num_pred, num_feature_input=num_feature_input,
                 model_a=run_sklearn_model(dataset, model_name, num_obs, num_pred, num_feature_input, num_feature_output),
                 model_b=best_model, model_name=model_name)
+            joblib.dump(best_model, model_path)
     else:
         best_model = run_sklearn_model(dataset, model_name, num_obs, num_pred, num_feature_input, num_feature_output)
-
-
-    joblib.dump(best_model, model_path)
+        joblib.dump(best_model, model_path)
 
     print(f"best model: {best_model}")
 
