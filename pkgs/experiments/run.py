@@ -79,10 +79,12 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
                         train_dataloader=dl, model_name=model_name, num_obs=num_obs, num_pred=num_pred,
                         n_trials=n_trials, device=device, num_feature_output=num_feature_output, num_feature_input=num_feature_input
                     ), test_ips, original_meld_test_set, dataset.meld_sc, device, num_obs, num_pred, model_name)
+                torch.save(best_model, model_path)
         else:
             best_model = ex_optuna(
                 train_dataloader=dl, model_name=model_name, num_obs=num_obs, num_pred=num_pred, n_trials=n_trials,
                 device=device, num_feature_input=num_feature_input, num_feature_output=num_feature_output)
+            torch.save(best_model, model_path)
 
         print(f"evaluate best model of {model_name}")
         print(f"model params: {best_model}")
@@ -94,8 +96,6 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
             best_model, torch.from_numpy(dataset.get_generalize_ips()).float(),
             dataset.get_original_meld_generalize()[:, num_obs:], dataset.get_original_meld_generalize(),
             dataset.meld_sc, device, num_obs, num_pred, model_name, "generalize")
-
-        torch.save(best_model, model_path)
 
         print(
             f"Model experiment takes {time.time() - s} seconds or {int((time.time() - s) / 60)} minutes")
