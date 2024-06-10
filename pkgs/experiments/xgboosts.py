@@ -4,7 +4,7 @@ import time
 import numpy as np
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.experimental import enable_halving_search_cv  # required by sklearn
-from sklearn.model_selection import HalvingGridSearchCV
+from sklearn.model_selection import HalvingGridSearchCV, RandomizedSearchCV
 from xgboost import XGBRegressor
 
 from pkgs.commons import model_save_path
@@ -23,12 +23,12 @@ def run_xgboost_model(dataset: SlidingWindowDataset, num_obs, num_pred, num_feat
     }
     model = XGBRegressor()
 
-    grid_search = HalvingGridSearchCV(
+    grid_search = RandomizedSearchCV(
         estimator=model,
-        param_grid=param_grid,
-        factor=5,
-        cv=2,
-        verbose=2,
+        param_distributions=param_grid,
+        n_iter=2,
+        verbose=3,
+        n_jobs=100
     )
 
     train_ips = np.reshape(dataset.get_train_ips(), (-1, num_obs * num_feature_input))

@@ -49,8 +49,10 @@ def exp_linear_model(df, num_obs, num_pred):
     print(f"meld_train nan {np.any(np.isnan(meld))} {np.any(np.isnan(T))}")
 
     break_i = int(meld.shape[0] * 0.8)
-    meld_train, meld_test = meld[:break_i, :], meld[:break_i, :]
-    time_train, time_test = T[:break_i, :], T[:break_i, :]
+    meld_train, meld_test = meld[:break_i, :], meld[break_i:, :]
+    time_train, time_test = T[:break_i, :], T[break_i:, :]
+
+    print(f"meld_train.shape {meld_train.shape} {time_train.shape} {meld_test.shape} {time_test.shape}")
 
     model_name = "linear"
     model_path = model_save_path(num_obs, num_pred) + "/" + model_name + ".pt"
