@@ -95,6 +95,7 @@ def run_sklearn_model(dataset: SlidingWindowDataset, model_name: str, num_obs, n
         param_grid=params,
         factor=10,
         cv=2,
+        verbose=3,
     )
     # try RandomizedSearchCV() if computing resource is limited
 
