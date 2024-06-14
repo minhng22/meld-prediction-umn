@@ -17,6 +17,8 @@ from pkgs.experiments.sklearns import exp_sklearn_model
 from pkgs.experiments.xgboosts import exp_xgboost_model
 
 
+# if compare_with_existing_best_model is True, we will run the model again no matter if a trained model exists.
+# If a trained model exists, we will compare the new model with the existing model and save the better one.
 def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_amount, to_run_models,
             compare_with_existing_best_model):
     batch_size = 256
