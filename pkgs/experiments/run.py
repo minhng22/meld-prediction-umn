@@ -7,10 +7,11 @@ import torch
 from torch.utils.data import DataLoader
 
 from pkgs.commons import input_path, model_save_path, models_to_run, preprocessed_train_set_data_path, \
-    preprocessed_test_set_data_path, preprocessed_generalize_set_data_path
+    preprocessed_test_set_data_path, preprocessed_generalize_set_data_path, torch_model_path
 from pkgs.data.dataset import SlidingWindowDataset
 from pkgs.data.harvest import harvest_data_with_interpolate
-from pkgs.experiments.commons import rnn_find_better_model, rnn_model_eval_and_plot
+from pkgs.experiments.commons import rnn_find_better_model
+from pkgs.experiments.evaluate import rnn_model_eval_and_plot
 from pkgs.experiments.linears import exp_linear_model
 from pkgs.experiments.optunas import ex_optuna
 from pkgs.experiments.sklearns import exp_sklearn_model
@@ -65,11 +66,10 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
             exp_linear_model(df, num_obs, num_pred)
             continue
 
-        model_path = model_save_path(num_obs, num_pred) + "/" + model_name + ".pt"
+        model_path = torch_model_path(num_obs, num_pred, model_name)
         dl = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
         test_ips = torch.from_numpy(dataset.get_test_ips()).float()
-        original_meld_test_set = dataset.get_original_meld_test()[:, num_obs:]
 
         if os.path.exists(model_path):
             print('best model exists')
@@ -80,7 +80,7 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
                     ex_optuna(
                         train_dataloader=dl, model_name=model_name, num_obs=num_obs, num_pred=num_pred,
                         n_trials=n_trials, device=device, num_feature_output=num_feature_output, num_feature_input=num_feature_input
-                    ), test_ips, original_meld_test_set, dataset.meld_sc, device, num_obs, num_pred, model_name)
+                    ), test_ips, dataset.get_original_meld_test()[:, num_obs:], dataset.meld_sc, device, num_obs, num_pred, model_name)
                 torch.save(best_model, model_path)
         else:
             best_model = ex_optuna(
@@ -92,11 +92,11 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
         print(f"model params: {best_model}")
 
         rnn_model_eval_and_plot(
-            best_model, test_ips, original_meld_test_set, dataset.get_original_meld_test(),
+            best_model, test_ips, dataset.get_original_meld_test(),
             dataset.meld_sc, device, num_obs, num_pred, model_name, "test")
         rnn_model_eval_and_plot(
             best_model, torch.from_numpy(dataset.get_generalize_ips()).float(),
-            dataset.get_original_meld_generalize()[:, num_obs:], dataset.get_original_meld_generalize(),
+            dataset.get_original_meld_generalize(),
             dataset.meld_sc, device, num_obs, num_pred, model_name, "generalize")
 
         print(

@@ -9,7 +9,7 @@ from sklearn.metrics import r2_score, mean_squared_error
 from torch import nn, optim
 import seaborn as sns
 
-from pkgs.commons import model_save_path, linear_plot_path
+from pkgs.commons import model_save_path, linear_plot_path, torch_model_path
 from pkgs.models.linears import LinearModel
 
 
@@ -55,7 +55,7 @@ def exp_linear_model(df, num_obs, num_pred):
     print(f"meld_train.shape {meld_train.shape} {time_train.shape} {meld_test.shape} {time_test.shape}")
 
     model_name = "linear"
-    model_path = model_save_path(num_obs, num_pred) + "/" + model_name + ".pt"
+    model_path = torch_model_path(num_obs, num_pred, model_name)
 
     if os.path.exists(model_path):
         print('best model exists')

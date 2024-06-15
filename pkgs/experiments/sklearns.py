@@ -3,28 +3,26 @@ import time
 
 import joblib
 import numpy as np
-from sklearn.metrics import r2_score, mean_squared_error
-from sklearn.experimental import enable_halving_search_cv # required by sklearn
+from sklearn.experimental import enable_halving_search_cv  # required by sklearn
 from sklearn.model_selection import HalvingGridSearchCV
 
-from pkgs.data.commons import inverse_scale_ops
+from pkgs.commons import sklearn_model_path
 from pkgs.data.dataset import SlidingWindowDataset
-from pkgs.data.plot import plot_box, plot_line, analyze_timestep_rmse, analyze_ci_and_pi
-from pkgs.commons import model_save_path
 from pkgs.experiments.commons import sklearn_find_better_model
+from pkgs.experiments.evaluate import eval_and_plot_sklearn_model
 from pkgs.models.commons import get_sklearn_model
 
 
 def exp_sklearn_model(dataset: SlidingWindowDataset, model_name: str, num_obs, num_pred, num_feature_input, num_feature_output, compare_with_existing_best_model):
     s = time.time()
 
-    model_path = model_save_path(num_obs, num_pred) + "/" + model_name + ".pkl"
+    model_path = sklearn_model_path(num_obs, num_pred, model_name)
 
     if os.path.exists(model_path):
         best_model = joblib.load(model_path)
         if compare_with_existing_best_model:
             best_model = sklearn_find_better_model(
-                test_ips=dataset.get_test_ips(), test_ip_meld=dataset.get_test_ip_meld(),
+                test_ips=dataset.get_test_ips(),
                 original_meld_test=dataset.get_original_meld_test(),
                 scaler=dataset.meld_sc, num_obs=num_obs, num_pred=num_pred, num_feature_input=num_feature_input,
                 model_a=run_sklearn_model(dataset, model_name, num_obs, num_pred, num_feature_input, num_feature_output),
@@ -36,52 +34,14 @@ def exp_sklearn_model(dataset: SlidingWindowDataset, model_name: str, num_obs, n
 
     print(f"best model: {best_model}")
 
-    # evaluate on test set
-    print("evaluating on test data")
-    test_ips = np.reshape(dataset.get_test_ips(), (-1, num_obs * num_feature_input))  # reshape data into 2D
-    tests_ops = best_model.predict(test_ips)
-
-    tests_ops_full = inverse_scale_ops(dataset.get_test_ip_meld(), tests_ops, dataset.meld_sc, num_obs, num_pred)
-    tests_ops = tests_ops_full[:, num_obs:]
-    tests = dataset.get_original_meld_test()[:, num_obs:]
-
-    print(f"test shape: {tests.shape} {tests_ops.shape}")
-    print(f"R-square is: {r2_score(tests, tests_ops):.4f}")
-    print(
-        f"RMSE is: {mean_squared_error(tests, tests_ops, squared=False):.4f}")
-
-    analyze_timestep_rmse(tests, tests_ops, "test", model_name, num_obs, num_pred)
-    analyze_ci_and_pi(tests, tests_ops, "test", model_name, num_obs, num_pred)
-
-    plot_name = f"{model_name} R-square :{round(r2_score(tests, tests_ops), 2)} RMSE {round(mean_squared_error(tests, tests_ops, squared=False), 2)}"
-
-    plot_box(tests, tests_ops, plot_name, model_name, num_obs, num_pred, "test")
-    plot_line(dataset.get_original_meld_test(),
-              tests_ops_full, plot_name, model_name, num_obs, num_pred, "test")
-
-    # evaluate on generalization set
-    print("evaluating on generalize data")
-    generalizes_ips = np.reshape(
-        dataset.get_generalize_ips(), (-1, num_obs * num_feature_input))  # reshape data into 2D
-    generalizes_ops = best_model.predict(generalizes_ips)
-
-    generalizes_ops_full = inverse_scale_ops(
-        dataset.get_generalize_ip_meld(), generalizes_ops, dataset.meld_sc, num_obs, num_pred)
-    generalizes_ops = generalizes_ops_full[:, num_obs:]
-    generalizes = dataset.get_original_meld_generalize()[:, num_obs:]
-
-    print(f"R-square is: {r2_score(generalizes, generalizes_ops):.4f}")
-    print(
-        f"RMSE is: {mean_squared_error(generalizes, generalizes_ops, squared=False):.4f}"
+    eval_and_plot_sklearn_model(
+        dataset.get_test_ips(), dataset.get_original_meld_test(), dataset.meld_sc,
+        model_name, num_obs, num_pred, num_feature_input, best_model, "test")
+    eval_and_plot_sklearn_model(
+        dataset.get_generalize_ips(), dataset.get_original_meld_generalize(),
+        dataset.meld_sc,
+        model_name, num_obs, num_pred, num_feature_input, best_model, "generalize"
     )
-
-    analyze_timestep_rmse(generalizes, generalizes_ops, "generalize", model_name, num_obs, num_pred)
-    analyze_ci_and_pi(generalizes, generalizes_ops, "generalize", model_name, num_obs, num_pred)
-
-    plot_name = f"{model_name} R-square :{round(r2_score(generalizes, generalizes_ops), 2)} " \
-                f"RMSE {round(mean_squared_error(generalizes, generalizes_ops, squared=False), 2)}"
-    plot_box(generalizes, generalizes_ops, plot_name, model_name, num_obs, num_pred, "generalize")
-    plot_line(dataset.get_original_meld_generalize(), generalizes_ops_full, plot_name, model_name, num_obs, num_pred, "generalize")
 
     print(f"total experiment time: {time.time() - s} seconds")
 

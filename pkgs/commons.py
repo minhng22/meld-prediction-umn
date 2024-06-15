@@ -6,7 +6,7 @@ meld_score_key_literal = "score"
 is_original_key_literal = "is_original"
 
 models = ["attention_lstm", "evr", "rfr", "xgboost", "linear", "tcn", "tcn_lstm", "lstm", "cnn_lstm"]
-models_to_run = ["xgboost"]
+models_to_run = ["attention_lstm", "evr", "rfr", "xgboost", "linear", "tcn", "tcn_lstm", "lstm", "cnn_lstm", "xgboost"]
 
 real_data_ratio = 0.9
 generalize_ratio = 0.25
@@ -29,6 +29,12 @@ def figs_path(num_obs, num_pred):
     return exp_path(num_obs, num_pred) + "/figs"
 def model_save_path(num_obs, num_pred):
     return exp_path(num_obs, num_pred) + "/models"
+def sklearn_model_path(num_obs, num_pred, model_name):
+    return f"{model_save_path(num_obs, num_pred)}/{model_name}.pkl"
+def xgboost_model_path(num_obs, num_pred, model_name):
+    return f"{model_save_path(num_obs, num_pred)}/{model_name}.json"
+def torch_model_path(num_obs, num_pred, model_name):
+    return f"{model_save_path(num_obs, num_pred)}/{model_name}.pt"
 def box_plot_path(num_obs, num_pred):
     return figs_path(num_obs, num_pred) + "/box_plot"
 def line_plot_path(num_obs, num_pred):
