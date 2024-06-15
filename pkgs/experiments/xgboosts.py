@@ -12,7 +12,7 @@ from pkgs.data.commons import inverse_scale_ops
 from pkgs.data.dataset import SlidingWindowDataset
 from pkgs.data.plot import analyze_timestep_rmse, analyze_ci_and_pi, plot_box, plot_line
 from pkgs.experiments.commons import sklearn_find_better_model
-from pkgs.experiments.evaluate import eval_and_plot_sklearn_model
+from pkgs.experiments.evaluate import sklearn_model_eval_and_plot
 
 
 def run_xgboost_model(dataset: SlidingWindowDataset, num_obs, num_pred, num_feature_input,
@@ -70,10 +70,10 @@ def exp_xgboost_model(dataset: SlidingWindowDataset, model_name: str, num_obs, n
 
     print(f"best model: {best_model}")
 
-    eval_and_plot_sklearn_model(
+    sklearn_model_eval_and_plot(
         dataset.get_test_ips(), dataset.get_original_meld_test(), dataset.meld_sc,
         model_name, num_obs, num_pred, num_feature_input, best_model, "test")
-    eval_and_plot_sklearn_model(
+    sklearn_model_eval_and_plot(
         dataset.get_generalize_ips(), dataset.get_original_meld_generalize(),
         dataset.meld_sc,
         model_name, num_obs, num_pred, num_feature_input, best_model, "generalize"

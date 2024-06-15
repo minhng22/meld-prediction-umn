@@ -5,12 +5,12 @@ import joblib
 import numpy as np
 import pandas as pd
 import torch
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import r2_score, mean_absolute_error, root_mean_squared_error
 from xgboost import XGBRegressor
 
 from pkgs.commons import input_path, preprocessed_train_set_data_path, \
     preprocessed_test_set_data_path, preprocessed_generalize_set_data_path, sklearn_model_path, xgboost_model_path, \
-    torch_model_path
+    torch_model_path, models_to_run
 from pkgs.data.commons import inverse_scale_ops
 from pkgs.data.dataset import SlidingWindowDataset
 from pkgs.data.harvest import harvest_data_with_interpolate
@@ -29,25 +29,29 @@ def rnn_model_eval(model, ips, expected_ops, scaler, device, num_obs, num_preds)
     pred_future = pred_full[:, num_obs:]
 
     print(f"check pred shape {pred_future.shape}")
-    best_rmse = mean_squared_error(expected_ops, pred_future, squared=False)
+    best_rmse = root_mean_squared_error(expected_ops, pred_future)
     best_rsquare = r2_score(expected_ops, pred_future)
+    best_mae = mean_absolute_error(expected_ops, pred_future)
 
-    return best_rmse, best_rsquare, pred_future, pred_full
+    return best_rmse, best_rsquare, best_mae, pred_future, pred_full
 
 
 def rnn_model_eval_and_plot(model, ips, output_full, scaler, device, num_obs, num_pred, model_name,
                             subset_exp_name):
     expected_ops = output_full[:, num_obs:]
-    r2, rmse, pred_future, pred_full = rnn_model_eval(model, ips, expected_ops, scaler, device, num_obs, num_pred)
+    rmse, r2, mae, pred_future, pred_full = rnn_model_eval(model, ips, expected_ops, scaler, device, num_obs, num_pred)
 
-    print(f"R-square is: {r2:.4f}")
-    print(f"RMSE is {rmse:.4f}")
+    print(
+        f"R-square is: {r2:.3f}\n"
+        f"RMSE is: {rmse:.3f}\n"
+        f"MAE is: {mae:.3f}\n"
+    )
 
     analyze_timestep_rmse(expected_ops, pred_future, subset_exp_name, model_name, num_obs, num_pred)
     analyze_ci_and_pi(expected_ops, pred_future, subset_exp_name, model_name, num_obs, num_pred)
 
     plot_name = f"{model_name} R-square :{round(r2_score(expected_ops, pred_future), 2)} " \
-                f"RMSE {round(mean_squared_error(expected_ops, pred_future, squared=False), 2)}"
+                f"RMSE {round(root_mean_squared_error(expected_ops, pred_future), 2)}"
 
     plot_box(expected_ops, pred_future, plot_name, model_name, num_obs, num_pred, subset_exp_name)
     plot_line(output_full, pred_full, plot_name, model_name, num_obs, num_pred, subset_exp_name)
@@ -71,29 +75,36 @@ def sklearn_model_eval(model, test_ips, expected_ops, scaler, num_obs, num_pred,
     pred_future = pred_full[:, num_obs:]
 
     print(f"check pred shape {pred_future.shape}")
-    best_rmse = mean_squared_error(expected_ops, pred_future, squared=False)
+    best_rmse = root_mean_squared_error(expected_ops, pred_future)
     best_rsquare = r2_score(expected_ops, pred_future)
+    best_mae = mean_absolute_error(expected_ops, pred_future)
 
-    return best_rmse, best_rsquare, pred_future, pred_full
+    return best_rmse, best_rsquare, best_mae, pred_future, pred_full
 
 
-def eval_and_plot_sklearn_model(test_ips, original_meld_test, scaler, model_name: str, num_obs, num_pred, num_feature_input, best_model, ext):
+def sklearn_model_eval_and_plot(test_ips, original_meld_test, scaler, model_name: str, num_obs, num_pred, num_feature_input, best_model, ext):
     expected_ops = original_meld_test[:, num_obs:]
-    r2, rmse, pred_future, pred_full = sklearn_model_eval(best_model, test_ips, expected_ops, scaler, num_obs, num_pred, num_feature_input)
+    rmse, r2, mae, pred_future, pred_full = sklearn_model_eval(best_model, test_ips, expected_ops, scaler, num_obs, num_pred, num_feature_input)
 
-    print(f"R-square is: {r2:.4f}")
-    print(f"RMSE is: {rmse:.4f}")
+    print(
+        f"R-square is: {r2:.3f}\n"
+        f"RMSE is: {rmse:.3f}\n"
+        f"MAE is: {mae:.3f}\n"
+    )
 
     analyze_timestep_rmse(expected_ops, pred_future, "test", model_name, num_obs, num_pred)
     analyze_ci_and_pi(expected_ops, pred_future, "test", model_name, num_obs, num_pred)
 
-    plot_name = f"{model_name} R-square :{round(r2_score(expected_ops, pred_future), 2)} RMSE {round(mean_squared_error(expected_ops, pred_future, squared=False), 2)}"
+    plot_name = (f"{model_name} R-square :{round(r2_score(expected_ops, pred_future), 2)} "
+                 f"RMSE {round(root_mean_squared_error(expected_ops, pred_future), 2)}")
 
     plot_box(expected_ops, pred_future, plot_name, model_name, num_obs, num_pred, ext)
     plot_line(original_meld_test, pred_full, plot_name, model_name, num_obs, num_pred, ext)
 
 
-def analyze_models_performance(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_amount, to_run_models):
+def run(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_amount, to_run_models):
+    num_feature_input, num_feature_output = 2, 1  # MELD and timestamp
+    device = torch.device("cpu")
     print(f"pre-processing data, experimenting on obs {num_obs} pred {num_pred}")
     s = time.time()
     df = pd.read_csv(input_path)
@@ -115,9 +126,6 @@ def analyze_models_performance(num_obs, num_pred, real_data_ratio, generalize_ra
     print(f"preprocessing data takes {time.time() - s} seconds")
     trained_models = []
     for model_name in to_run_models:
-        print("=====================================")
-        print(f"exp on model {model_name}")
-
         if model_name in ["evr", "rfr"]:
             m = joblib.load(sklearn_model_path(num_obs, num_pred, model_name))
         elif model_name == "xgboost":
@@ -130,8 +138,69 @@ def analyze_models_performance(num_obs, num_pred, real_data_ratio, generalize_ra
 
         trained_models.append([model_name, m])
 
+    evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_input, device)
 
-def evaluate_models(trained_models, dataset, num_obs, num_pred):
+
+def evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_input, device):
     for model_name, model in trained_models:
-        print(f"evaluating model {model_name}")
+        print(f"evaluating model {model_name} on test set")
+        if model_name in ["evr", "rfr", "xgboost"]:
+            rmse, r2, mae, pred_future, pred_full = sklearn_model_eval(
+                model=model,
+                test_ips=dataset.get_test_ips(),
+                expected_ops=dataset.get_original_meld_test()[:, num_obs:],
+                scaler=dataset.meld_sc,
+                num_obs=num_obs,
+                num_pred=num_pred,
+                num_feature_input=num_feature_input
+            )
+        elif model_name in ["attention_lstm", "tcn", "tcn_lstm", "lstm", "cnn_lstm"]:
+            rmse, r2, mae, pred_future, pred_full = rnn_model_eval(
+                model = model,
+                ips = torch.from_numpy(dataset.get_test_ips()).float(),
+                expected_ops=dataset.get_original_meld_test()[:, num_obs:],
+                scaler=dataset.meld_sc,
+                device=device,
+                num_obs=num_obs,
+                num_preds=num_pred
+            )
+        else:
+            raise ValueError(f"model {model_name} not supported")
+        print(
+            f"R-square is: {r2:.3f}\n"
+            f"RMSE is: {rmse:.3f}\n"
+            f"MAE is: {mae:.3f}\n"
+        )
 
+        print(f"evaluating model {model_name} on generalize set")
+        if model_name in ["evr", "rfr", "xgboost"]:
+            rmse, r2, mae, pred_future, pred_full = sklearn_model_eval(
+                model=model,
+                test_ips=dataset.get_generalize_ips(),
+                expected_ops=dataset.get_original_meld_generalize()[:, num_obs:],
+                scaler=dataset.meld_sc,
+                num_obs=num_obs,
+                num_pred=num_pred,
+                num_feature_input=num_feature_input
+            )
+        elif model_name in ["attention_lstm", "tcn", "tcn_lstm", "lstm", "cnn_lstm"]:
+            rmse, r2, mae, pred_future, pred_full = rnn_model_eval(
+                model = model,
+                ips = torch.from_numpy(dataset.get_generalize_ips()).float(),
+                expected_ops=dataset.get_original_meld_generalize()[:, num_obs:],
+                scaler=dataset.meld_sc,
+                device=device,
+                num_obs=num_obs,
+                num_preds=num_pred)
+        else:
+            raise ValueError(f"model {model_name} not supported")
+        print(
+            f"R-square is: {r2:.3f}\n"
+            f"RMSE is: {rmse:.3f}\n"
+            f"MAE is: {mae:.3f}\n"
+        )
+
+
+if __name__ == "__main__":
+    run(num_obs=5, num_pred=3, real_data_ratio=0.7, generalize_ratio=0.2, interpolate_amount=0.2,
+        to_run_models=models_to_run)
