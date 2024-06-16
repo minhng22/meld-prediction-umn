@@ -25,8 +25,29 @@ preprocessed_generalize_set_data_path = project_dir() + "/data/preprocessed_gen.
 
 def exp_path(num_obs, num_pred):
     return project_dir() + f"/experiments_generated_data/obs_{num_obs}_pred_{num_pred}"
+
+
 def figs_path(num_obs, num_pred):
     return exp_path(num_obs, num_pred) + "/figs"
+
+
+def time_series_sequence_path(num_obs, num_pred):
+    return figs_path(num_obs, num_pred) + "/time_series_sequence"
+
+
+def model_performance_path(num_obs, num_pred):
+    return figs_path(num_obs, num_pred) + "/model_performance"
+def box_plot_path(num_obs, num_pred):
+    return model_performance_path(num_obs, num_pred) + "/box_plot"
+def line_plot_path(num_obs, num_pred):
+    return model_performance_path(num_obs, num_pred) + "/line_plot"
+def linear_plot_path():
+    return project_dir() + f"/experiments_generated_data/linear_plot"
+def rmse_by_day_path(num_obs, num_pred):
+    return model_performance_path(num_obs, num_pred) + "/rmse_by_day"
+
+
+# ---- Paths for the trained models ----
 def model_save_path(num_obs, num_pred):
     return exp_path(num_obs, num_pred) + "/models"
 def sklearn_model_path(num_obs, num_pred, model_name):
@@ -35,13 +56,15 @@ def xgboost_model_path(num_obs, num_pred, model_name):
     return f"{model_save_path(num_obs, num_pred)}/{model_name}.json"
 def torch_model_path(num_obs, num_pred, model_name):
     return f"{model_save_path(num_obs, num_pred)}/{model_name}.pt"
-def box_plot_path(num_obs, num_pred):
-    return figs_path(num_obs, num_pred) + "/box_plot"
-def line_plot_path(num_obs, num_pred):
-    return figs_path(num_obs, num_pred) + "/line_plot"
-def linear_plot_path():
-    return project_dir() + f"/experiments_generated_data/linear_plot"
-def pi_ci_path(num_obs, num_pred):
-    return figs_path(num_obs, num_pred) + "/figs_pi"
-def rmse_by_day_path(num_obs, num_pred):
-    return figs_path(num_obs, num_pred) + "/rmse_by_day"
+
+
+def models_performance_path(num_obs, num_pred):
+    return figs_path(num_obs, num_pred) + "/models_performance"
+def line_plot_models_performance_path(num_obs, num_pred):
+    return models_performance_path(num_obs, num_pred) + "/line_plot"
+def rmse_by_day_models_performance_path(num_obs, num_pred):
+    return models_performance_path(num_obs, num_pred) + "/rmse_by_day"
+def box_plot_models_performance_path(num_obs, num_pred):
+    return models_performance_path(num_obs, num_pred) + "/box_plot"
+def rmse_by_day_models_performance_path(num_obs, num_pred):
+    return models_performance_path(num_obs, num_pred) + "/rmse_by_day"

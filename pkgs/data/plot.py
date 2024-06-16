@@ -1,10 +1,13 @@
-import numpy as np
 import matplotlib.pyplot as plt
-from pkgs.commons import figs_path, box_plot_path, line_plot_path, pi_ci_path, rmse_by_day_path
-from pkgs.data.commons import generate_timestep_for_plot, calculate_rmse_of_time_step
-from scipy.stats import sem, t, norm
+import numpy as np
 import pandas as pd
 import seaborn as sns
+from scipy.stats import sem, t, norm
+
+from pkgs.commons import box_plot_path, line_plot_path, rmse_by_day_path, \
+    line_plot_models_performance_path, time_series_sequence_path, box_plot_models_performance_path, \
+    rmse_by_day_models_performance_path
+from pkgs.data.commons import calculate_rmse_of_time_step
 
 target_color = "steelblue"
 predict_color = "crimson"
@@ -32,8 +35,7 @@ def plot_data(train, test, generalize, num_observed, num_predicted, label_post_t
         plt.ylabel('MELD Score')
         plt.legend()
 
-        figPath = (figs_path(num_observed, num_predicted) +
-                   f'/analyze_{label}_{label_post_text}.png')
+        figPath = f'{time_series_sequence_path(num_observed, num_predicted)}/analyze_{label}_{label_post_text}.png'
         print(f"Saving figure to {figPath}")
 
         plt.savefig(figPath, bbox_inches="tight")
@@ -62,7 +64,6 @@ def plot_box(y_target, y, plot_name, model_name, num_obs, num_pred, ext=""):
     sns.boxplot(data=create_df(y, y_target), x='day', y='score',
                 hue='data', palette={'target': target_color, 'prediction': predict_color})
 
-    plt.title(plot_name)
     plt.legend(bbox_to_anchor=(1.05, 1.0), loc="upper left")
 
     plt.savefig(box_plot_path(num_obs, num_pred) + "/" + ext + "_" + model_name, bbox_inches="tight")
@@ -83,66 +84,91 @@ def plot_line(y_target, y, plot_name, model_name, num_obs, num_pred, ext=""):
 
     stk = int(y_avg.shape[0] / 10) if int(y_avg.shape[0] / 10) > 0 else 1
     plt.xticks(np.arange(1, y_avg.shape[0] + 1, stk))
-    plt.title(plot_name)
 
     plt.savefig(line_plot_path(num_obs, num_pred) + "/" + ext + "_" + model_name, bbox_inches="tight")
     plt.clf()
 
 
-def analyze_ci_and_pi(target, prediction, exp_name, model_name, num_obs, num_pred):
-    CONFIDENCE_LEVEL = 0.95  # common value for confidence level
+def plot_line_models(y_target, ys, model_names, num_obs, num_pred, ext=""):
+    print("plot_line")
+    y_target_avg = np.average(y_target, axis=0)
 
-    def analyze_ci():
-        print(f"Calculating confidence interval for {exp_name} {model_name}")
-        data = calculate_rmse_of_time_step(target, prediction)
-        print(f"RMSE of timestep data: {data}")
+    tsf_y = np.arange(1, y_target_avg.shape[0] + 1)
 
-        n = len(data)
-        mean = np.mean(data)
-        standard_error = sem(data)
-        t_value = t.ppf((1 + CONFIDENCE_LEVEL) / 2, n - 1)
-        margin_of_error = t_value * standard_error
+    plt.plot(tsf_y, y_target_avg, label="target")
 
-        lower_bound = mean - margin_of_error
-        upper_bound = mean + margin_of_error
+    for i, y in enumerate(ys):
+        y_avg = np.average(y, axis=0)
+        plt.plot(tsf_y, y_avg, label=model_names[i])
 
-        print(
-            f"Confidence interval {CONFIDENCE_LEVEL * 100}% for RMSE for {exp_name} {model_name}.\n" 
-            f"data: {data}\n"
-            f"lower_bound {lower_bound:.2f} upper_bound {upper_bound:.2f} mean {mean:.2f} standard_error {standard_error:.2f}\n")
+    plt.legend(bbox_to_anchor=(1.05, 1.0), loc="upper left")
 
-    def analyze_pi():
-        print(f"Calculating prediction interval for {exp_name} {model_name}")
-        residuals = target - prediction
-        residual_std = np.std(residuals)
-        z_score = norm.ppf((100 - CONFIDENCE_LEVEL) / 200)
-        margin_of_error = z_score * residual_std
+    stk = int(y_target_avg.shape[0] / 10) if int(y_target_avg.shape[0] / 10) > 0 else 1
+    plt.xticks(np.arange(1, y_target_avg.shape[0] + 1, stk))
 
-        lower_bound = np.min(prediction - margin_of_error, axis=0)
-        upper_bound = np.max(prediction + margin_of_error, axis=0)
-
-        print(f"Prediction interval {CONFIDENCE_LEVEL * 100}% for RMSE for {exp_name} {model_name}")
-
-        tsf_y = np.arange(1, lower_bound.shape[0] + 1)
-
-        plt.plot(tsf_y, lower_bound, color=predict_color, label="lower bound")
-        plt.plot(tsf_y, upper_bound, color=target_color, label="upper bound")
-
-        plt.legend(bbox_to_anchor=(1.05, 1.0), loc="upper left")
-
-        stk = int(lower_bound.shape[0] / 10) if int(lower_bound.shape[0] / 10) > 0 else 1
-        plt.xticks(np.arange(1, lower_bound.shape[0] + 1, stk))
-        plt.title(model_name)
-
-        plt.savefig(pi_ci_path(num_obs, num_pred) + "/" + exp_name +
-                    "_" + model_name, bbox_inches="tight")
-        plt.clf()
-
-    analyze_ci()
-    analyze_pi()
+    plt.savefig(line_plot_models_performance_path(num_obs, num_pred) + "/" + ext, bbox_inches="tight")
+    plt.clf()
 
 
-def analyze_timestep_rmse(ip, op, exp_name, model_name, num_obs, num_pred):
+def plot_box_models(y_target, ys, model_names, num_obs, num_pred, ext=""):
+    print("plot_box_models")
+
+    def create_df(ip_list, ip_target):
+        D = pd.DataFrame(columns=['score', 'data', 'day'])
+
+        for i in range(ip_target.shape[1]):
+            for score in ip_target[:, i]:
+                D = pd.concat([D, pd.DataFrame([{'score': score, 'data': 'target', 'day': i + 1}])], ignore_index=True)
+            for j, ip in enumerate(ip_list):
+                for score in ip[:, i]:
+                    D = pd.concat([D, pd.DataFrame([{'score': score, 'data': model_names[j], 'day': i + 1}])], ignore_index=True)
+        return D
+
+    df = create_df(ys, y_target)
+    predict_colors = sns.color_palette("husl", len(model_names))
+
+    # Create a color palette dictionary for seaborn
+    palette = {'target': target_color}
+    for model_idx, model_name in enumerate(model_names):
+        palette[model_name] = predict_colors[model_idx]
+
+    sns.boxplot(data=df, x='day', y='score', hue='data', palette=palette)
+
+    plt.legend(bbox_to_anchor=(1.05, 1.0), loc="upper left")
+
+    plt.savefig(box_plot_models_performance_path(num_obs, num_pred) + "/" + ext, bbox_inches="tight")
+    plt.clf()
+
+def analyze_ci_and_pi(target, prediction, exp_name, model_name):
+    print(f"Calculating prediction interval for {exp_name} {model_name}")
+    # Calculate residuals
+    residuals = target - prediction
+
+    # Calculate the standard error of the residuals
+    se_residuals = np.std(residuals, ddof=2)
+
+    # Calculate the standard error of the prediction
+    se_predictions = se_residuals / np.sqrt(prediction.shape[1])
+
+    # Critical value for 95% confidence
+    critical_value = 1.96
+
+    # Calculate the confidence intervals per time step
+    lower_bounds = []
+    upper_bounds = []
+    for i in range(prediction.shape[1]):
+        margin_of_error = critical_value * se_predictions
+        lower_bound = prediction[i] - margin_of_error
+        upper_bound = prediction[i] + margin_of_error
+        lower_bounds.append(round(lower_bound, 3))
+        upper_bounds.append(round(upper_bound, 3))
+
+    print(
+        f"95% CI for RMSE for {exp_name} {model_name}\n"
+        f"lower_bound {lower_bound} upper_bound {upper_bound}\n")
+
+
+def plot_timestep_rmse(ip, op, exp_name, model_name, num_obs, num_pred):
     print(f"Calculating rmse for {exp_name}")
     if ip.shape[1] != op.shape[1]:
         raise ValueError("ip and op must have same shape")
@@ -150,11 +176,34 @@ def analyze_timestep_rmse(ip, op, exp_name, model_name, num_obs, num_pred):
 
     print(f"rmses: {rmses}")
 
-    plt.plot(list(range(len(rmses))), rmses)
+    plt.plot(np.arange(1, num_pred + 1), rmses)
+    plt.xticks(ticks=np.arange(1, num_pred + 1))  # Set x-ticks to be integers
 
     plt.xlabel('Day')
     plt.ylabel('RMSE')
-    plt.title('RMSE by day')
 
     plt.savefig(rmse_by_day_path(num_obs, num_pred) + "/" + exp_name + "_" + model_name, bbox_inches="tight")
+    plt.clf()
+
+
+def plot_timestep_rmse_models(y_target, ys, exp_name, model_names, num_obs, num_pred):
+    print(f"Calculating rmse for {exp_name}")
+
+    for i, op in enumerate(ys):
+        if y_target.shape[1] != op.shape[1]:
+            raise ValueError("ip and op must have same shape")
+        rmse = calculate_rmse_of_time_step(y_target, op)
+
+        print(f"rmse: {rmse}")
+
+        plt.plot(np.arange(1, num_pred + 1), rmse, label=f"{model_names[i]}")
+
+    plt.xticks(ticks=np.arange(1, num_pred + 1))  # Set x-ticks to be integers
+
+    plt.legend(bbox_to_anchor=(1.05, 1.0), loc="upper left")
+
+    plt.xlabel('Day')
+    plt.ylabel('RMSE')
+
+    plt.savefig(rmse_by_day_models_performance_path(num_obs, num_pred) + "/" + exp_name, bbox_inches="tight")
     plt.clf()

@@ -14,7 +14,8 @@ from pkgs.commons import input_path, preprocessed_train_set_data_path, \
 from pkgs.data.commons import inverse_scale_ops
 from pkgs.data.dataset import SlidingWindowDataset
 from pkgs.data.harvest import harvest_data_with_interpolate
-from pkgs.data.plot import analyze_timestep_rmse, analyze_ci_and_pi, plot_box, plot_line
+from pkgs.data.plot import plot_timestep_rmse, analyze_ci_and_pi, plot_box, plot_line, plot_line_models, \
+    plot_box_models, plot_timestep_rmse_models
 from sklearn.experimental import enable_halving_search_cv  # required by sklearn
 
 
@@ -47,8 +48,8 @@ def rnn_model_eval_and_plot(model, ips, output_full, scaler, device, num_obs, nu
         f"MAE is: {mae:.3f}\n"
     )
 
-    analyze_timestep_rmse(expected_ops, pred_future, subset_exp_name, model_name, num_obs, num_pred)
-    analyze_ci_and_pi(expected_ops, pred_future, subset_exp_name, model_name, num_obs, num_pred)
+    plot_timestep_rmse(expected_ops, pred_future, subset_exp_name, model_name, num_obs, num_pred)
+    analyze_ci_and_pi(expected_ops, pred_future, subset_exp_name, model_name)
 
     plot_name = f"{model_name} R-square :{round(r2_score(expected_ops, pred_future), 2)} " \
                 f"RMSE {round(root_mean_squared_error(expected_ops, pred_future), 2)}"
@@ -92,8 +93,8 @@ def sklearn_model_eval_and_plot(test_ips, original_meld_test, scaler, model_name
         f"MAE is: {mae:.3f}\n"
     )
 
-    analyze_timestep_rmse(expected_ops, pred_future, "test", model_name, num_obs, num_pred)
-    analyze_ci_and_pi(expected_ops, pred_future, "test", model_name, num_obs, num_pred)
+    plot_timestep_rmse(expected_ops, pred_future, "test", model_name, num_obs, num_pred)
+    analyze_ci_and_pi(expected_ops, pred_future, "test", model_name)
 
     plot_name = (f"{model_name} R-square :{round(r2_score(expected_ops, pred_future), 2)} "
                  f"RMSE {round(root_mean_squared_error(expected_ops, pred_future), 2)}")
@@ -138,14 +139,39 @@ def run(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_amount
 
         trained_models.append([model_name, m])
 
-    evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_input, device)
+    eval_res_test, eval_res_gen = evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_input, device)
+    plot_line_models(
+        y_target=dataset.get_original_meld_test(),
+        ys=[res[5] for res in eval_res_test],
+        model_names=[res[0] for res in eval_res_test],
+        num_obs=num_obs,
+        num_pred=num_pred,
+        ext="test"
+    )
+    plot_box_models(
+        y_target=dataset.get_original_meld_test()[:, num_obs:],
+        ys=[res[4] for res in eval_res_test],
+        model_names=[res[0] for res in eval_res_test],
+        num_obs=num_obs,
+        num_pred=num_pred,
+        ext="test"
+    )
+    plot_timestep_rmse_models(
+        y_target=dataset.get_original_meld_test()[:, num_obs:],
+        ys=[res[4] for res in eval_res_test],
+        model_names=[res[0] for res in eval_res_test],
+        num_obs=num_obs,
+        num_pred=num_pred,
+        exp_name="test"
+    )
 
 
 def evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_input, device):
+    res_test, res_generalize = [], []
     for model_name, model in trained_models:
         print(f"evaluating model {model_name} on test set")
         if model_name in ["evr", "rfr", "xgboost"]:
-            rmse, r2, mae, pred_future, pred_full = sklearn_model_eval(
+            test_rmse, test_r2, test_mae, test_pred_future, test_pred_full = sklearn_model_eval(
                 model=model,
                 test_ips=dataset.get_test_ips(),
                 expected_ops=dataset.get_original_meld_test()[:, num_obs:],
@@ -155,7 +181,7 @@ def evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_inpu
                 num_feature_input=num_feature_input
             )
         elif model_name in ["attention_lstm", "tcn", "tcn_lstm", "lstm", "cnn_lstm"]:
-            rmse, r2, mae, pred_future, pred_full = rnn_model_eval(
+            test_rmse, test_r2, test_mae, test_pred_future, test_pred_full = rnn_model_eval(
                 model = model,
                 ips = torch.from_numpy(dataset.get_test_ips()).float(),
                 expected_ops=dataset.get_original_meld_test()[:, num_obs:],
@@ -167,14 +193,14 @@ def evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_inpu
         else:
             raise ValueError(f"model {model_name} not supported")
         print(
-            f"R-square is: {r2:.3f}\n"
-            f"RMSE is: {rmse:.3f}\n"
-            f"MAE is: {mae:.3f}\n"
+            f"R-square is: {test_r2:.3f}\n"
+            f"RMSE is: {test_rmse:.3f}\n"
+            f"MAE is: {test_mae:.3f}\n"
         )
 
         print(f"evaluating model {model_name} on generalize set")
         if model_name in ["evr", "rfr", "xgboost"]:
-            rmse, r2, mae, pred_future, pred_full = sklearn_model_eval(
+            gen_rmse, gen_r2, gen_mae, gen_pred_future, gen_pred_full = sklearn_model_eval(
                 model=model,
                 test_ips=dataset.get_generalize_ips(),
                 expected_ops=dataset.get_original_meld_generalize()[:, num_obs:],
@@ -184,7 +210,7 @@ def evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_inpu
                 num_feature_input=num_feature_input
             )
         elif model_name in ["attention_lstm", "tcn", "tcn_lstm", "lstm", "cnn_lstm"]:
-            rmse, r2, mae, pred_future, pred_full = rnn_model_eval(
+            gen_rmse, gen_r2, gen_mae, gen_pred_future, gen_pred_full = rnn_model_eval(
                 model = model,
                 ips = torch.from_numpy(dataset.get_generalize_ips()).float(),
                 expected_ops=dataset.get_original_meld_generalize()[:, num_obs:],
@@ -195,10 +221,16 @@ def evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_inpu
         else:
             raise ValueError(f"model {model_name} not supported")
         print(
-            f"R-square is: {r2:.3f}\n"
-            f"RMSE is: {rmse:.3f}\n"
-            f"MAE is: {mae:.3f}\n"
+            f"R-square is: {gen_r2:.3f}\n"
+            f"RMSE is: {gen_rmse:.3f}\n"
+            f"MAE is: {gen_mae:.3f}\n"
         )
+
+        res_test.append([model_name, test_rmse, test_r2, test_mae, test_pred_future, test_pred_full])
+        res_generalize.append([model_name, gen_rmse, gen_r2, gen_mae, gen_pred_future, gen_pred_full])
+
+    return res_test, res_generalize
+
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ from xgboost import XGBRegressor
 from pkgs.commons import model_save_path, xgboost_model_path
 from pkgs.data.commons import inverse_scale_ops
 from pkgs.data.dataset import SlidingWindowDataset
-from pkgs.data.plot import analyze_timestep_rmse, analyze_ci_and_pi, plot_box, plot_line
+from pkgs.data.plot import plot_timestep_rmse, analyze_ci_and_pi, plot_box, plot_line
 from pkgs.experiments.commons import sklearn_find_better_model
 from pkgs.experiments.evaluate import sklearn_model_eval_and_plot
 
@@ -54,6 +54,7 @@ def exp_xgboost_model(dataset: SlidingWindowDataset, model_name: str, num_obs, n
 
     model_path = xgboost_model_path(num_obs, num_pred, model_name)
     if os.path.exists(model_path):
+        print('best model exists')
         best_model = XGBRegressor()
         best_model.load_model(model_path)
         if compare_with_existing_best_model:
