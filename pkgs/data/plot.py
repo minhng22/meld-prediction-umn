@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from scipy.stats import sem, t, norm
 
 from pkgs.commons import box_plot_path, line_plot_path, rmse_by_day_path, \
     line_plot_models_performance_path, time_series_sequence_path, box_plot_models_performance_path, \
@@ -138,34 +137,6 @@ def plot_box_models(y_target, ys, model_names, num_obs, num_pred, ext=""):
 
     plt.savefig(box_plot_models_performance_path(num_obs, num_pred) + "/" + ext, bbox_inches="tight")
     plt.clf()
-
-def evaluate_95_ci(target, prediction, exp_name, model_name):
-    print(f"Calculating prediction interval for {exp_name} {model_name}")
-    # Calculate residuals
-    residuals = target - prediction
-
-    # Calculate the standard error of the residuals
-    se_residuals = np.std(residuals, ddof=2)
-
-    # Calculate the standard error of the prediction
-    se_predictions = se_residuals / np.sqrt(prediction.shape[1])
-
-    # Critical value for 95% confidence
-    critical_value = 1.96
-
-    # Calculate the confidence intervals per time step
-    lower_bounds = []
-    upper_bounds = []
-    for i in range(prediction.shape[1]):
-        margin_of_error = critical_value * se_predictions
-        lower_bound = prediction[i] - margin_of_error
-        upper_bound = prediction[i] + margin_of_error
-        lower_bounds.append(np.round(lower_bound, 3))
-        upper_bounds.append(np.round(upper_bound, 3))
-
-    print(
-        f"95% CI for RMSE for {exp_name} {model_name}\n"
-        f"lower_bound {lower_bound} upper_bound {upper_bound}\n")
 
 
 def plot_timestep_rmse(ip, op, exp_name, model_name, num_obs, num_pred):

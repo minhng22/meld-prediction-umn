@@ -14,7 +14,7 @@ from pkgs.commons import input_path, preprocessed_train_set_data_path, \
 from pkgs.data.commons import inverse_scale_ops
 from pkgs.data.dataset import SlidingWindowDataset
 from pkgs.data.harvest import harvest_data_with_interpolate
-from pkgs.data.plot import plot_timestep_rmse, evaluate_95_ci, plot_box, plot_line, plot_line_models, \
+from pkgs.data.plot import plot_timestep_rmse, plot_box, plot_line, plot_line_models, \
     plot_box_models, plot_timestep_rmse_models
 from sklearn.experimental import enable_halving_search_cv  # required by sklearn
 
@@ -198,6 +198,8 @@ def evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_inpu
             f"MAE is: {test_mae:.3f}\n"
         )
 
+        evaluate_95_ci(dataset.get_original_meld_test()[:, num_obs:], test_pred_future, "test", model_name)
+
         print(f"evaluating model {model_name} on generalize set")
         if model_name in ["evr", "rfr", "xgboost"]:
             gen_rmse, gen_r2, gen_mae, gen_pred_future, gen_pred_full = sklearn_model_eval(
@@ -225,12 +227,41 @@ def evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_inpu
             f"RMSE is: {gen_rmse:.3f}\n"
             f"MAE is: {gen_mae:.3f}\n"
         )
+        evaluate_95_ci(dataset.get_original_meld_generalize()[:, num_obs:], gen_pred_future, "generalize", model_name)
 
         res_test.append([model_name, test_rmse, test_r2, test_mae, test_pred_future, test_pred_full])
         res_generalize.append([model_name, gen_rmse, gen_r2, gen_mae, gen_pred_future, gen_pred_full])
 
     return res_test, res_generalize
 
+
+def evaluate_95_ci(target, prediction, exp_name, model_name):
+    print(f"Calculating prediction interval for {exp_name} {model_name}")
+    # Calculate residuals
+    residuals = target - prediction
+
+    # Calculate the standard error of the residuals
+    se_residuals = np.std(residuals, ddof=2)
+
+    # Calculate the standard error of the prediction
+    se_predictions = se_residuals / np.sqrt(prediction.shape[1])
+
+    # Critical value for 95% confidence
+    critical_value = 1.96
+
+    # Calculate the confidence intervals per time step
+    lower_bounds = []
+    upper_bounds = []
+    for i in range(prediction.shape[1]):
+        margin_of_error = critical_value * se_predictions
+        lower_bound = prediction[i] - margin_of_error
+        upper_bound = prediction[i] + margin_of_error
+        lower_bounds.append(np.round(lower_bound, 3))
+        upper_bounds.append(np.round(upper_bound, 3))
+
+    print(
+        f"95% CI of each time step for {exp_name} {model_name}\n"
+        f"lower_bound {lower_bound} upper_bound {upper_bound}\n")
 
 
 if __name__ == "__main__":
