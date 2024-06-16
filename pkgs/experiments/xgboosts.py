@@ -10,7 +10,7 @@ from xgboost import XGBRegressor
 from pkgs.commons import model_save_path, xgboost_model_path
 from pkgs.data.commons import inverse_scale_ops
 from pkgs.data.dataset import SlidingWindowDataset
-from pkgs.data.plot import plot_timestep_rmse, analyze_ci_and_pi, plot_box, plot_line
+from pkgs.data.plot import plot_timestep_rmse, evaluate_95_ci, plot_box, plot_line
 from pkgs.experiments.commons import sklearn_find_better_model
 from pkgs.experiments.evaluate import sklearn_model_eval_and_plot
 

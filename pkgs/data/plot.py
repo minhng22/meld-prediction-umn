@@ -139,7 +139,7 @@ def plot_box_models(y_target, ys, model_names, num_obs, num_pred, ext=""):
     plt.savefig(box_plot_models_performance_path(num_obs, num_pred) + "/" + ext, bbox_inches="tight")
     plt.clf()
 
-def analyze_ci_and_pi(target, prediction, exp_name, model_name):
+def evaluate_95_ci(target, prediction, exp_name, model_name):
     print(f"Calculating prediction interval for {exp_name} {model_name}")
     # Calculate residuals
     residuals = target - prediction
@@ -160,8 +160,8 @@ def analyze_ci_and_pi(target, prediction, exp_name, model_name):
         margin_of_error = critical_value * se_predictions
         lower_bound = prediction[i] - margin_of_error
         upper_bound = prediction[i] + margin_of_error
-        lower_bounds.append(round(lower_bound, 3))
-        upper_bounds.append(round(upper_bound, 3))
+        lower_bounds.append(np.round(lower_bound, 3))
+        upper_bounds.append(np.round(upper_bound, 3))
 
     print(
         f"95% CI for RMSE for {exp_name} {model_name}\n"
@@ -187,12 +187,12 @@ def plot_timestep_rmse(ip, op, exp_name, model_name, num_obs, num_pred):
 
 
 def plot_timestep_rmse_models(y_target, ys, exp_name, model_names, num_obs, num_pred):
-    print(f"Calculating rmse for {exp_name}")
+    print(f"Calculating rmses for {exp_name}")
 
-    for i, op in enumerate(ys):
-        if y_target.shape[1] != op.shape[1]:
-            raise ValueError("ip and op must have same shape")
-        rmse = calculate_rmse_of_time_step(y_target, op)
+    for i, y in enumerate(ys):
+        if y_target.shape[1] != y.shape[1]:
+            raise ValueError("ip and y must have same shape")
+        rmse = calculate_rmse_of_time_step(y_target, y)
 
         print(f"rmse: {rmse}")
 

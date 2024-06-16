@@ -1,7 +1,7 @@
 import math
 import numpy as np
 import pandas as pd
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, root_mean_squared_error
 
 
 def bottom_patient_by_len_record(d: dict, bottom_ratio):
@@ -89,6 +89,6 @@ def calculate_rmse_of_time_step(ip, op):
     for i in range(ip.shape[1]):
         ip_i = ip[:, i]
         op_i = op[:, i]
-        rmse = np.sqrt(mean_squared_error(ip_i, op_i))
+        rmse = np.sqrt(root_mean_squared_error(ip_i, op_i))
         rmses.append(round(rmse, 3))
     return rmses

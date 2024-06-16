@@ -14,7 +14,7 @@ from pkgs.commons import input_path, preprocessed_train_set_data_path, \
 from pkgs.data.commons import inverse_scale_ops
 from pkgs.data.dataset import SlidingWindowDataset
 from pkgs.data.harvest import harvest_data_with_interpolate
-from pkgs.data.plot import plot_timestep_rmse, analyze_ci_and_pi, plot_box, plot_line, plot_line_models, \
+from pkgs.data.plot import plot_timestep_rmse, evaluate_95_ci, plot_box, plot_line, plot_line_models, \
     plot_box_models, plot_timestep_rmse_models
 from sklearn.experimental import enable_halving_search_cv  # required by sklearn
 
@@ -49,7 +49,7 @@ def rnn_model_eval_and_plot(model, ips, output_full, scaler, device, num_obs, nu
     )
 
     plot_timestep_rmse(expected_ops, pred_future, subset_exp_name, model_name, num_obs, num_pred)
-    analyze_ci_and_pi(expected_ops, pred_future, subset_exp_name, model_name)
+    evaluate_95_ci(expected_ops, pred_future, subset_exp_name, model_name)
 
     plot_name = f"{model_name} R-square :{round(r2_score(expected_ops, pred_future), 2)} " \
                 f"RMSE {round(root_mean_squared_error(expected_ops, pred_future), 2)}"
@@ -94,7 +94,7 @@ def sklearn_model_eval_and_plot(test_ips, original_meld_test, scaler, model_name
     )
 
     plot_timestep_rmse(expected_ops, pred_future, "test", model_name, num_obs, num_pred)
-    analyze_ci_and_pi(expected_ops, pred_future, "test", model_name)
+    evaluate_95_ci(expected_ops, pred_future, "test", model_name)
 
     plot_name = (f"{model_name} R-square :{round(r2_score(expected_ops, pred_future), 2)} "
                  f"RMSE {round(root_mean_squared_error(expected_ops, pred_future), 2)}")
