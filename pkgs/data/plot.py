@@ -145,7 +145,7 @@ def plot_timestep_rmse(ip, op, exp_name, model_name, num_obs, num_pred):
         raise ValueError("ip and op must have same shape")
     rmses = calculate_rmse_of_time_step(ip, op)
 
-    print(f"rmses: {rmses}")
+    print(f"rmses of model {model_name}: {rmses}")
 
     plt.plot(np.arange(1, num_pred + 1), rmses)
     plt.xticks(ticks=np.arange(1, num_pred + 1))  # Set x-ticks to be integers
@@ -165,7 +165,7 @@ def plot_timestep_rmse_models(y_target, ys, exp_name, model_names, num_obs, num_
             raise ValueError("ip and y must have same shape")
         rmse = calculate_rmse_of_time_step(y_target, y)
 
-        print(f"rmse per time step of model {model_names}: {rmse}")
+        print(f"rmse per time step of model {model_names[i]}: {rmse}")
 
         plt.plot(np.arange(1, num_pred + 1), rmse, label=f"{model_names[i]}")
 
