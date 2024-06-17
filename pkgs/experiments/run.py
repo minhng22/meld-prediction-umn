@@ -31,17 +31,17 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
     s = time.time()
     df = pd.read_csv(input_path)
 
-    if not os.path.exists(preprocessed_train_set_data_path):
+    if not os.path.exists(preprocessed_train_set_data_path(num_obs, num_pred)):
         print("getting new data")
         exp_trains, exp_tests, exp_generalizes = harvest_data_with_interpolate(
             df, num_obs + num_pred, real_data_ratio, generalize_ratio, interpolate_amount)
-        np.save(preprocessed_train_set_data_path, exp_trains)
-        np.save(preprocessed_test_set_data_path, exp_tests)
-        np.save(preprocessed_generalize_set_data_path, exp_generalizes)
+        np.save(preprocessed_train_set_data_path(num_obs, num_pred), exp_trains)
+        np.save(preprocessed_test_set_data_path(num_obs, num_pred), exp_tests)
+        np.save(preprocessed_generalize_set_data_path(num_obs, num_pred), exp_generalizes)
     else:
-        exp_trains = np.load(preprocessed_train_set_data_path)
-        exp_tests = np.load(preprocessed_test_set_data_path)
-        exp_generalizes = np.load(preprocessed_generalize_set_data_path)
+        exp_trains = np.load(preprocessed_train_set_data_path(num_obs, num_pred))
+        exp_tests = np.load(preprocessed_test_set_data_path(num_obs, num_pred))
+        exp_generalizes = np.load(preprocessed_generalize_set_data_path(num_obs, num_pred))
 
     print(f"preprocessing data takes {time.time() - s} seconds")
 

@@ -5,7 +5,7 @@ import joblib
 import numpy as np
 import pandas as pd
 import torch
-from sklearn.metrics import r2_score, mean_absolute_error, root_mean_squared_error
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 from xgboost import XGBRegressor
 
 from pkgs.commons import input_path, preprocessed_train_set_data_path, \
@@ -30,7 +30,7 @@ def rnn_model_eval(model, ips, expected_ops, scaler, device, num_obs, num_preds)
     pred_future = pred_full[:, num_obs:]
 
     print(f"check pred shape {pred_future.shape}")
-    best_rmse = root_mean_squared_error(expected_ops, pred_future)
+    best_rmse = mean_squared_error(expected_ops, pred_future, squared=False)
     best_rsquare = r2_score(expected_ops, pred_future)
     best_mae = mean_absolute_error(expected_ops, pred_future)
 
@@ -52,7 +52,7 @@ def rnn_model_eval_and_plot(model, ips, output_full, scaler, device, num_obs, nu
     evaluate_95_ci(expected_ops, pred_future, subset_exp_name, model_name)
 
     plot_name = f"{model_name} R-square :{round(r2_score(expected_ops, pred_future), 2)} " \
-                f"RMSE {round(root_mean_squared_error(expected_ops, pred_future), 2)}"
+                f"RMSE {round(mean_squared_error(expected_ops, pred_future, squared=False), 2)}"
 
     plot_box(expected_ops, pred_future, plot_name, model_name, num_obs, num_pred, subset_exp_name)
     plot_line(output_full, pred_full, plot_name, model_name, num_obs, num_pred, subset_exp_name)
@@ -76,7 +76,7 @@ def sklearn_model_eval(model, test_ips, expected_ops, scaler, num_obs, num_pred,
     pred_future = pred_full[:, num_obs:]
 
     print(f"check pred shape {pred_future.shape}")
-    best_rmse = root_mean_squared_error(expected_ops, pred_future)
+    best_rmse = mean_squared_error(expected_ops, pred_future, squared=False)
     best_rsquare = r2_score(expected_ops, pred_future)
     best_mae = mean_absolute_error(expected_ops, pred_future)
 
@@ -97,7 +97,7 @@ def sklearn_model_eval_and_plot(test_ips, original_meld_test, scaler, model_name
     evaluate_95_ci(expected_ops, pred_future, "test", model_name)
 
     plot_name = (f"{model_name} R-square :{round(r2_score(expected_ops, pred_future), 2)} "
-                 f"RMSE {round(root_mean_squared_error(expected_ops, pred_future), 2)}")
+                 f"RMSE {round(mean_squared_error(expected_ops, pred_future, squared=False), 2)}")
 
     plot_box(expected_ops, pred_future, plot_name, model_name, num_obs, num_pred, ext)
     plot_line(original_meld_test, pred_full, plot_name, model_name, num_obs, num_pred, ext)
@@ -110,17 +110,17 @@ def run(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_amount
     s = time.time()
     df = pd.read_csv(input_path)
 
-    if not os.path.exists(preprocessed_train_set_data_path):
+    if not os.path.exists(preprocessed_train_set_data_path(num_obs, num_pred)):
         print("getting new data")
         exp_trains, exp_tests, exp_generalizes = harvest_data_with_interpolate(
             df, num_obs + num_pred, real_data_ratio, generalize_ratio, interpolate_amount)
-        np.save(preprocessed_train_set_data_path, exp_trains)
-        np.save(preprocessed_test_set_data_path, exp_tests)
-        np.save(preprocessed_generalize_set_data_path, exp_generalizes)
+        np.save(preprocessed_train_set_data_path(num_obs, num_pred), exp_trains)
+        np.save(preprocessed_test_set_data_path(num_obs, num_pred), exp_tests)
+        np.save(preprocessed_generalize_set_data_path(num_obs, num_pred), exp_generalizes)
     else:
-        exp_trains = np.load(preprocessed_train_set_data_path)
-        exp_tests = np.load(preprocessed_test_set_data_path)
-        exp_generalizes = np.load(preprocessed_generalize_set_data_path)
+        exp_trains = np.load(preprocessed_train_set_data_path(num_obs, num_pred))
+        exp_tests = np.load(preprocessed_test_set_data_path(num_obs, num_pred))
+        exp_generalizes = np.load(preprocessed_generalize_set_data_path(num_obs, num_pred))
 
     dataset = SlidingWindowDataset(exp_trains, exp_tests, exp_generalizes, num_obs, num_pred)
 
@@ -140,9 +140,10 @@ def run(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_amount
         trained_models.append([model_name, m])
 
     eval_res_test, eval_res_gen = evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_input, device)
+
     plot_line_models(
-        y_target=dataset.get_original_meld_test(),
-        ys=[res[5] for res in eval_res_test],
+        y_target=dataset.get_original_meld_test()[:, num_obs:],
+        ys=[res[4] for res in eval_res_test],
         model_names=[res[0] for res in eval_res_test],
         num_obs=num_obs,
         num_pred=num_pred,
@@ -163,6 +164,31 @@ def run(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_amount
         num_obs=num_obs,
         num_pred=num_pred,
         exp_name="test"
+    )
+
+    plot_line_models(
+        y_target=dataset.get_original_meld_generalize()[:, num_obs:],
+        ys=[res[4] for res in eval_res_gen],
+        model_names=[res[0] for res in eval_res_gen],
+        num_obs=num_obs,
+        num_pred=num_pred,
+        ext="generalize"
+    )
+    plot_box_models(
+        y_target=dataset.get_original_meld_generalize()[:, num_obs:],
+        ys=[res[4] for res in eval_res_gen],
+        model_names=[res[0] for res in eval_res_gen],
+        num_obs=num_obs,
+        num_pred=num_pred,
+        ext="generalize"
+    )
+    plot_timestep_rmse_models(
+        y_target=dataset.get_original_meld_generalize()[:, num_obs:],
+        ys=[res[4] for res in eval_res_gen],
+        model_names=[res[0] for res in eval_res_gen],
+        num_obs=num_obs,
+        num_pred=num_pred,
+        exp_name="generalize"
     )
 
 
@@ -265,5 +291,5 @@ def evaluate_95_ci(target, prediction, exp_name, model_name):
 
 
 if __name__ == "__main__":
-    run(num_obs=5, num_pred=3, real_data_ratio=0.7, generalize_ratio=0.2, interpolate_amount=0.2,
+    run(num_obs=5, num_pred=3, real_data_ratio=0.7, generalize_ratio=0.2, interpolate_amount="d",
         to_run_models=models_to_run)

@@ -18,14 +18,19 @@ def project_dir():
     return str(current_script_path.parent.parent)
 input_path = project_dir() + "/data/patient_scores.csv"
 
-preprocessed_train_set_data_path = project_dir() + "/data/preprocessed_train.npy"
-preprocessed_test_set_data_path = project_dir() + "/data/preprocessed_test.npy"
-preprocessed_generalize_set_data_path = project_dir() + "/data/preprocessed_gen.npy"
-
 
 def exp_path(num_obs, num_pred):
     return project_dir() + f"/experiments_generated_data/obs_{num_obs}_pred_{num_pred}"
 
+
+def preprocessed_train_set_data_path(num_obs, num_pred):
+    return exp_path(num_obs, num_pred) + "/data/preprocessed_train.npy"
+
+def preprocessed_test_set_data_path(num_obs, num_pred):
+    return exp_path(num_obs, num_pred) + "/data/preprocessed_test.npy"
+
+def preprocessed_generalize_set_data_path(num_obs, num_pred):
+    return exp_path(num_obs, num_pred) + "/data/preprocessed_gen.npy"
 
 def figs_path(num_obs, num_pred):
     return exp_path(num_obs, num_pred) + "/figs"
