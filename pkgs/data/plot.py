@@ -165,7 +165,7 @@ def plot_timestep_rmse_models(y_target, ys, exp_name, model_names, num_obs, num_
             raise ValueError("ip and y must have same shape")
         rmse = calculate_rmse_of_time_step(y_target, y)
 
-        print(f"rmse: {rmse}")
+        print(f"rmse per time step of model {model_names}: {rmse}")
 
         plt.plot(np.arange(1, num_pred + 1), rmse, label=f"{model_names[i]}")
 
