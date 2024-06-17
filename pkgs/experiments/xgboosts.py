@@ -2,17 +2,14 @@ import os
 import time
 
 import numpy as np
-from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.experimental import enable_halving_search_cv  # required by sklearn
-from sklearn.model_selection import HalvingGridSearchCV, RandomizedSearchCV
+from sklearn.model_selection import HalvingGridSearchCV
 from xgboost import XGBRegressor
 
-from pkgs.commons import model_save_path, xgboost_model_path
-from pkgs.data.commons import inverse_scale_ops
+from pkgs.commons import xgboost_model_path
 from pkgs.data.dataset import SlidingWindowDataset
-from pkgs.data.plot import plot_timestep_rmse, plot_box, plot_line
 from pkgs.experiments.commons import sklearn_find_better_model
-from pkgs.experiments.evaluate import sklearn_model_eval_and_plot, evaluate_95_ci
+from pkgs.experiments.evaluate import sklearn_model_eval_and_plot
 
 
 def run_xgboost_model(dataset: SlidingWindowDataset, num_obs, num_pred, num_feature_input,
