@@ -25,6 +25,7 @@ def plot_density(y_true, y_pred, num_obs, num_pred, model_name, plot_title, ext)
     plt.savefig(f"{linear_plot_path()}/{ext}_{model_name}.png", bbox_inches="tight")
     plt.clf()
 
+
 def exp_linear_model(df, num_obs, num_pred):
     s = time.time()
 

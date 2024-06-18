@@ -1,6 +1,7 @@
 from sklearn.ensemble import ExtraTreesRegressor, RandomForestRegressor
 
 from pkgs.models.cnns import CNNLSTMModel
+from pkgs.models.linears import TimeSeriesLinearModel
 from pkgs.models.lstms import AttentionAutoencoderLSTMModel, LSTMModel
 from pkgs.models.tcns import TCNLSTMModel, TCNModel
 
@@ -63,6 +64,13 @@ def get_model(model_name, s_s, device, num_obs, num_pred, num_feature_input, num
             drop_out=s_s["dropout_lstm"],
             num_pred=num_pred,
             num_obs=num_obs,
+            num_feature_ip=num_feature_input,
+            num_feature_op=num_feature_output,
+        )
+    elif model_name == "time_series_linear":
+        m = TimeSeriesLinearModel(
+            num_obs=num_obs,
+            num_pred=num_pred,
             num_feature_ip=num_feature_input,
             num_feature_op=num_feature_output,
         )

@@ -132,7 +132,7 @@ def run(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_amount
         elif model_name == "xgboost":
             m = XGBRegressor()
             m.load_model(xgboost_model_path(num_obs, num_pred, model_name))
-        elif model_name in ["attention_lstm", "tcn", "tcn_lstm", "lstm", "cnn_lstm"]:
+        elif model_name in ["attention_lstm", "tcn", "tcn_lstm", "lstm", "cnn_lstm", "time_series_linear"]:
             m = torch.load(torch_model_path(num_obs, num_pred, model_name))
         else:
             raise ValueError(f"model {model_name} not supported")
@@ -206,7 +206,7 @@ def evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_inpu
                 num_pred=num_pred,
                 num_feature_input=num_feature_input
             )
-        elif model_name in ["attention_lstm", "tcn", "tcn_lstm", "lstm", "cnn_lstm"]:
+        elif model_name in ["attention_lstm", "tcn", "tcn_lstm", "lstm", "cnn_lstm", "time_series_linear"]:
             test_rmse, test_r2, test_mae, test_pred_future, test_pred_full = rnn_model_eval(
                 model = model,
                 ips = torch.from_numpy(dataset.get_test_ips()).float(),
@@ -237,7 +237,7 @@ def evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_inpu
                 num_pred=num_pred,
                 num_feature_input=num_feature_input
             )
-        elif model_name in ["attention_lstm", "tcn", "tcn_lstm", "lstm", "cnn_lstm"]:
+        elif model_name in ["attention_lstm", "tcn", "tcn_lstm", "lstm", "cnn_lstm", "time_series_linear"]:
             gen_rmse, gen_r2, gen_mae, gen_pred_future, gen_pred_full = rnn_model_eval(
                 model = model,
                 ips = torch.from_numpy(dataset.get_generalize_ips()).float(),
