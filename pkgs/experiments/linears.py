@@ -7,9 +7,8 @@ import torch
 from matplotlib import pyplot as plt
 from sklearn.metrics import r2_score, mean_squared_error
 from torch import nn, optim
-import seaborn as sns
 
-from pkgs.commons import model_save_path, linear_plot_path, torch_model_path
+from pkgs.commons import linear_plot_path, torch_model_path
 from pkgs.models.linears import LinearModel
 
 
