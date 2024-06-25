@@ -106,4 +106,4 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
 
 
 if __name__ == "__main__":
-    run_exp(5, 3, 0.9, 0.25, "d", models_to_run, False)
+    run_exp(5, 3, 0.9, 0.2, "d", models_to_run, False)

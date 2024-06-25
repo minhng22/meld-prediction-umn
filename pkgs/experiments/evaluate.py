@@ -291,5 +291,5 @@ def evaluate_95_ci(target, prediction, exp_name, model_name):
 
 
 if __name__ == "__main__":
-    run(num_obs=5, num_pred=3, real_data_ratio=0.7, generalize_ratio=0.2, interpolate_amount="d",
+    run(num_obs=5, num_pred=3, real_data_ratio=0.9, generalize_ratio=0.2, interpolate_amount="d",
         to_run_models=models_to_run)
