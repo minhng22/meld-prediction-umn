@@ -5,15 +5,9 @@ import numpy as np
 from pkgs.data.commons import split
 
 class SlidingWindowDataset(Dataset):
-    # meld_sc and time_sc are scalers for MELD scores and timestamps. If they exist, don't refit them.
-    def __init__(self, trains, tests, generalizes, num_obs, num_pred, meld_sc, time_sc):
+    def __init__(self, trains, tests, generalizes, num_obs, num_pred):
         self.meld_sc = MinMaxScaler((0, 1))
         self.time_sc = MinMaxScaler((-1, 1))
-
-        if meld_sc is not None:
-            self.meld_sc = meld_sc
-        if time_sc is not None:
-            self.time_sc = time_sc
 
         tests = np.array(tests)
         generalizes = np.array(generalizes)
@@ -23,23 +17,12 @@ class SlidingWindowDataset(Dataset):
         self.tests_original = tests
         self.generalizes_original = generalizes
 
-        if meld_sc is None:
-            self.train_ips_meld, self.train_targets_meld = split(
-                self.meld_sc.fit_transform(trains[:, :, 0]), num_obs, num_pred
-            )
-        else:
-            self.train_ips_meld, self.train_targets_meld = split(
-                self.meld_sc.transform(trains[:, :, 0]), num_obs, num_pred
-            )
-
-        if time_sc is None:
-            self.train_ips_time, _ = split(
-                self.time_sc.fit_transform(trains[:, :, 1]), num_obs, num_pred
-            )
-        else:
-            self.train_ips_time, _ = split(
-                self.time_sc.transform(trains[:, :, 1]), num_obs, num_pred
-            )
+        self.train_ips_meld, self.train_targets_meld = split(
+            self.meld_sc.fit_transform(trains[:, :, 0]), num_obs, num_pred
+        )
+        self.train_ips_time, _ = split(
+            self.time_sc.fit_transform(trains[:, :, 1]), num_obs, num_pred
+        )
 
         self.test_ips_meld, _ = split(
             self.meld_sc.transform(tests[:, :, 0]), num_obs, num_pred

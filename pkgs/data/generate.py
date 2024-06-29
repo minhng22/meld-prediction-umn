@@ -64,8 +64,7 @@ def generate_harvested_data_graph(
         np.squeeze(test[:, :, :1], axis=-1),
         np.squeeze(generalize[:, :, :1], axis=-1),
         num_observed_l, num_predicted_l,
-        f"window_size{num_observed_l + num_predicted_l}_"
-        f"real_data_ratio{real_data_ratio_l}_generalize_ratio{generalize_ratio_l}")
+        f"window_size{num_observed_l + num_predicted_l}_real_data_ratio{real_data_ratio_l}_generalize_ratio{generalize_ratio_l}")
 
 
 if __name__ == "__main__":
