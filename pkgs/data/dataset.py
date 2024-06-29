@@ -4,8 +4,18 @@ import torch
 import numpy as np
 from pkgs.data.commons import split
 
+
 class SlidingWindowDataset(Dataset):
-    def __init__(self, trains, tests, generalizes, num_obs, num_pred):
+    def __init__(self):
+        self.meld_sc, self.time_sc = None, None
+        self.train_meld_original, self.tests_original, self.generalizes_original = None, None, None
+
+        self.train_ips_meld, self.train_targets_meld = None, None
+        self.test_ips_meld, self.test_targets_meld = None, None
+        self.train_ips_time, self.generalize_ips_meld = None, None
+        self.test_ips_time, self.generalize_ips_time = None, None
+
+    def setup_full(self, trains, tests, generalizes, num_obs, num_pred):
         self.meld_sc = MinMaxScaler((0, 1))
         self.time_sc = MinMaxScaler((-1, 1))
 
@@ -18,25 +28,22 @@ class SlidingWindowDataset(Dataset):
         self.generalizes_original = generalizes
 
         self.train_ips_meld, self.train_targets_meld = split(
-            self.meld_sc.fit_transform(trains[:, :, 0]), num_obs, num_pred
-        )
+            self.meld_sc.fit_transform(trains[:, :, 0]), num_obs, num_pred)
         self.train_ips_time, _ = split(
-            self.time_sc.fit_transform(trains[:, :, 1]), num_obs, num_pred
-        )
+            self.time_sc.fit_transform(trains[:, :, 1]), num_obs, num_pred)
 
-        self.test_ips_meld, _ = split(
-            self.meld_sc.transform(tests[:, :, 0]), num_obs, num_pred
-        )
-        self.generalize_ips_meld, _ = split(
-            self.meld_sc.transform(generalizes[:, :, 0]), num_obs, num_pred
-        )
+        self.test_ips_meld, _ = split(self.meld_sc.transform(tests[:, :, 0]), num_obs, num_pred)
+        self.generalize_ips_meld, _ = split(self.meld_sc.transform(generalizes[:, :, 0]), num_obs, num_pred)
 
-        self.test_ips_time, _ = split(
-            self.time_sc.transform(tests[:, :, 1]), num_obs, num_pred
-        )
-        self.generalize_ips_time, _ = split(
-            self.time_sc.transform(generalizes[:, :, 1]), num_obs, num_pred
-        )
+        self.test_ips_time, _ = split(self.time_sc.transform(tests[:, :, 1]), num_obs, num_pred)
+        self.generalize_ips_time, _ = split(self.time_sc.transform(generalizes[:, :, 1]), num_obs, num_pred)
+
+    def setup_test(self, tests, num_obs, num_pred, meld_sc, time_sc):
+        self.meld_sc = meld_sc
+        self.time_sc = time_sc
+        self.tests_original = tests
+        self.test_ips_meld = split(self.meld_sc.transform(tests[:, :, 0]), num_obs, num_pred)
+        self.test_ips_time, _ = split(self.time_sc.transform(tests[:, :, 1]), num_obs, num_pred)
 
     def __getitem__(self, i):
         train = np.concatenate((self.train_ips_meld[i], self.train_ips_time[i]), axis=1)
@@ -74,47 +81,3 @@ class SlidingWindowDataset(Dataset):
 
     def get_generalize_ip_meld(self):
         return self.generalize_ips_meld
-
-
-def filter_minus_one(data):
-    t = None
-    for i in range(len(data)):
-        d = data[i]
-        if not np.any(d == -1):
-            if t is None:
-                t = np.reshape(d, (1, d.shape[0], d.shape[1]))
-            else:
-                t = np.concatenate((t, np.reshape(d, (1, d.shape[0], d.shape[1]))), axis=0)
-    return t
-
-
-def rand_fill_minus1(melds):
-    n = melds.numel()
-    m = int(round(n * 0.8))
-    indices = np.random.choice(n, m, replace=False)
-    melds = melds.contiguous()
-    melds.flatten()[indices] = -1
-
-    return melds
-
-
-class FillerDataset(Dataset):
-    def __init__(self, dataset: SlidingWindowDataset, num_obs, num_pred):
-        data = dataset.get_original_meld_train()
-        print(f"Original data shape {data.shape}")
-
-        sc = MinMaxScaler((0, 1))
-        data = data[:, :num_obs, :]
-
-        print(f"after extracting observed meld {data.shape}")
-        data = filter_minus_one(data)  # don't use filled meld record
-        print(f"after filter minus 1 {data.shape}")
-
-        data = np.reshape(data, (data.shape[0], data.shape[1] * data.shape[2]))
-        data = sc.fit_transform(data)
-        self.target = np.reshape(data, (data.shape[0], num_obs, 1))  # this is just MELD, so 1 feature
-
-        print(f"target data shape {self.target.shape}")
-
-        self.ips = rand_fill_minus1(torch.from_numpy(self.target))
-        print(f"ips shape {self.ips.shape}")

@@ -2,6 +2,7 @@ import ast
 import sys
 import numpy as np
 
+from pkgs.data.dataset import SlidingWindowDataset
 
 supporting_num_obs = [5]
 supporting_num_pred = [1, 3, 5, 7]
@@ -17,7 +18,8 @@ def main():
         np.reshape(meld_na_scores, (1, len(meld_na_scores), 1)),
         np.reshape(time_stamps, (1, len(time_stamps), 1))), axis=2)
 
-    print(f'here {data.shape}')
+    data = SlidingWindowDataset()
+    data.setup_test(data, len(meld_na_scores), num_pred, None, None)
 
 
 def process_input():

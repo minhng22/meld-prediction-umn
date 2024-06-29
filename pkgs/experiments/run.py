@@ -49,7 +49,8 @@ def run_exp(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_am
         print("=====================================")
         print(f"exp on model {model_name}")
 
-        dataset = SlidingWindowDataset(exp_trains, exp_tests, exp_generalizes, num_obs, num_pred)
+        dataset = SlidingWindowDataset()
+        dataset.setup_full(exp_trains, exp_tests, exp_generalizes, num_obs, num_pred)
 
         print("finding best model")
         s = time.time()

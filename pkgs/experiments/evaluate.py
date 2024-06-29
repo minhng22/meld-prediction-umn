@@ -122,7 +122,8 @@ def run(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_amount
         exp_tests = np.load(preprocessed_test_set_data_path(num_obs, num_pred))
         exp_generalizes = np.load(preprocessed_generalize_set_data_path(num_obs, num_pred))
 
-    dataset = SlidingWindowDataset(exp_trains, exp_tests, exp_generalizes, num_obs, num_pred)
+    dataset = SlidingWindowDataset()
+    dataset.setup_full(exp_trains, exp_tests, exp_generalizes, num_obs, num_pred)
 
     print(f"preprocessing data takes {time.time() - s} seconds")
     trained_models = []
