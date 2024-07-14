@@ -19,6 +19,7 @@ def project_dir():
     return str(current_script_path.parent.parent)
 input_path = project_dir() + "/data/patient_scores.csv"
 
+model_performance_tables = project_dir() + "/experiments_generated_data/model_performance_tables"
 
 def exp_path(num_obs, num_pred):
     return project_dir() + f"/experiments_generated_data/obs_{num_obs}_pred_{num_pred}"
@@ -32,6 +33,12 @@ def preprocessed_test_set_data_path(num_obs, num_pred):
 
 def preprocessed_generalize_set_data_path(num_obs, num_pred):
     return exp_path(num_obs, num_pred) + "/data/preprocessed_gen.npy"
+
+def meld_scaler_path(num_obs, num_pred):
+    return exp_path(num_obs, num_pred) + "/data/meld_scaler.json"
+
+def time_stamp_scaler_path(num_obs, num_pred):
+    return exp_path(num_obs, num_pred) + "/data/time_stamp_scaler.json"
 
 def figs_path(num_obs, num_pred):
     return exp_path(num_obs, num_pred) + "/figs"

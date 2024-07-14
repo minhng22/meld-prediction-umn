@@ -12,8 +12,8 @@ def rnn_find_better_model(model_a, model_b, test_ips, original_meld_test, scaler
     if model_a is None:
         return model_b
 
-    curr_rmse, _, _, _, _ = rnn_model_eval(model_a, test_ips, original_meld_test, scaler, device, num_obs, num_pred)
-    best_rmse, _, _, _, _ = rnn_model_eval(model_b, test_ips, original_meld_test, scaler, device, num_obs, num_pred)
+    curr_rmse, _, _, _, _, _ = rnn_model_eval(model_a, test_ips, original_meld_test, scaler, device, num_obs, num_pred)
+    best_rmse, _, _, _, _, _ = rnn_model_eval(model_b, test_ips, original_meld_test, scaler, device, num_obs, num_pred)
 
     if curr_rmse < best_rmse:
         return model_a

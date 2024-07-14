@@ -18,6 +18,8 @@ from pkgs.data.plot import plot_timestep_rmse, plot_box, plot_line, plot_line_mo
     plot_box_models, plot_timestep_rmse_models
 from sklearn.experimental import enable_halving_search_cv  # required by sklearn
 
+from pkgs.experiments.diebold_mariano import diebold_mariano_test
+
 
 def rnn_model_eval(model, ips, expected_ops, scaler, device, num_obs, num_preds):
     model_pred = model(ips.to(device)).to("cpu").detach().numpy()
@@ -34,13 +36,15 @@ def rnn_model_eval(model, ips, expected_ops, scaler, device, num_obs, num_preds)
     best_rsquare = r2_score(expected_ops, pred_future)
     best_mae = mean_absolute_error(expected_ops, pred_future)
 
-    return best_rmse, best_rsquare, best_mae, pred_future, pred_full
+    residual = expected_ops - pred_future
+
+    return best_rmse, best_rsquare, best_mae, pred_future, pred_full, residual
 
 
 def rnn_model_eval_and_plot(model, ips, output_full, scaler, device, num_obs, num_pred, model_name,
                             subset_exp_name):
     expected_ops = output_full[:, num_obs:]
-    rmse, r2, mae, pred_future, pred_full = rnn_model_eval(model, ips, expected_ops, scaler, device, num_obs, num_pred)
+    rmse, r2, mae, pred_future, pred_full, resi = rnn_model_eval(model, ips, expected_ops, scaler, device, num_obs, num_pred)
 
     print(
         f"R-square is: {r2:.3f}\n"
@@ -80,12 +84,14 @@ def sklearn_model_eval(model, test_ips, expected_ops, scaler, num_obs, num_pred,
     best_rsquare = r2_score(expected_ops, pred_future)
     best_mae = mean_absolute_error(expected_ops, pred_future)
 
-    return best_rmse, best_rsquare, best_mae, pred_future, pred_full
+    residual = expected_ops - pred_future
+
+    return best_rmse, best_rsquare, best_mae, pred_future, pred_full, residual
 
 
 def sklearn_model_eval_and_plot(test_ips, original_meld_test, scaler, model_name: str, num_obs, num_pred, num_feature_input, best_model, ext):
     expected_ops = original_meld_test[:, num_obs:]
-    rmse, r2, mae, pred_future, pred_full = sklearn_model_eval(best_model, test_ips, expected_ops, scaler, num_obs, num_pred, num_feature_input)
+    rmse, r2, mae, pred_future, pred_full, resi = sklearn_model_eval(best_model, test_ips, expected_ops, scaler, num_obs, num_pred, num_feature_input)
 
     print(
         f"R-square is: {r2:.3f}\n"
@@ -141,6 +147,9 @@ def run(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_amount
         trained_models.append([model_name, m])
 
     eval_res_test, eval_res_gen = evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_input, device)
+
+    diebold_mariano_test(eval_res_test, "test")
+    diebold_mariano_test(eval_res_test, "generalize")
 
     plot_line_models(
         y_target=dataset.get_original_meld_test()[:, num_obs:],
@@ -198,7 +207,7 @@ def evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_inpu
     for model_name, model in trained_models:
         print(f"evaluating model {model_name} on test set")
         if model_name in ["evr", "rfr", "xgboost"]:
-            test_rmse, test_r2, test_mae, test_pred_future, test_pred_full = sklearn_model_eval(
+            test_rmse, test_r2, test_mae, test_pred_future, test_pred_full, test_resi = sklearn_model_eval(
                 model=model,
                 test_ips=dataset.get_test_ips(),
                 expected_ops=dataset.get_original_meld_test()[:, num_obs:],
@@ -208,7 +217,7 @@ def evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_inpu
                 num_feature_input=num_feature_input
             )
         elif model_name in ["attention_lstm", "tcn", "tcn_lstm", "lstm", "cnn_lstm", "time_series_linear"]:
-            test_rmse, test_r2, test_mae, test_pred_future, test_pred_full = rnn_model_eval(
+            test_rmse, test_r2, test_mae, test_pred_future, test_pred_full, test_resi = rnn_model_eval(
                 model = model,
                 ips = torch.from_numpy(dataset.get_test_ips()).float(),
                 expected_ops=dataset.get_original_meld_test()[:, num_obs:],
@@ -229,7 +238,7 @@ def evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_inpu
 
         print(f"evaluating model {model_name} on generalize set")
         if model_name in ["evr", "rfr", "xgboost"]:
-            gen_rmse, gen_r2, gen_mae, gen_pred_future, gen_pred_full = sklearn_model_eval(
+            gen_rmse, gen_r2, gen_mae, gen_pred_future, gen_pred_full, gen_resi = sklearn_model_eval(
                 model=model,
                 test_ips=dataset.get_generalize_ips(),
                 expected_ops=dataset.get_original_meld_generalize()[:, num_obs:],
@@ -239,9 +248,9 @@ def evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_inpu
                 num_feature_input=num_feature_input
             )
         elif model_name in ["attention_lstm", "tcn", "tcn_lstm", "lstm", "cnn_lstm", "time_series_linear"]:
-            gen_rmse, gen_r2, gen_mae, gen_pred_future, gen_pred_full = rnn_model_eval(
-                model = model,
-                ips = torch.from_numpy(dataset.get_generalize_ips()).float(),
+            gen_rmse, gen_r2, gen_mae, gen_pred_future, gen_pred_full, gen_resi = rnn_model_eval(
+                model=model,
+                ips=torch.from_numpy(dataset.get_generalize_ips()).float(),
                 expected_ops=dataset.get_original_meld_generalize()[:, num_obs:],
                 scaler=dataset.meld_sc,
                 device=device,
@@ -256,8 +265,8 @@ def evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_inpu
         )
         evaluate_95_ci(dataset.get_original_meld_generalize()[:, num_obs:], gen_pred_future, "generalize", model_name)
 
-        res_test.append([model_name, test_rmse, test_r2, test_mae, test_pred_future, test_pred_full])
-        res_generalize.append([model_name, gen_rmse, gen_r2, gen_mae, gen_pred_future, gen_pred_full])
+        res_test.append([model_name, test_rmse, test_r2, test_mae, test_pred_future, test_pred_full, test_resi])
+        res_generalize.append([model_name, gen_rmse, gen_r2, gen_mae, gen_pred_future, gen_pred_full, gen_resi])
 
     return res_test, res_generalize
 

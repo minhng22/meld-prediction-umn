@@ -2,7 +2,10 @@ from torch.utils.data import DataLoader, Dataset
 from sklearn.preprocessing import MinMaxScaler
 import torch
 import numpy as np
+
+from pkgs.commons import meld_scaler_path, time_stamp_scaler_path
 from pkgs.data.commons import split
+from pkgs.data.scaler import save_fitted_scaler
 
 
 class SlidingWindowDataset(Dataset):
@@ -38,12 +41,8 @@ class SlidingWindowDataset(Dataset):
         self.test_ips_time, _ = split(self.time_sc.transform(tests[:, :, 1]), num_obs, num_pred)
         self.generalize_ips_time, _ = split(self.time_sc.transform(generalizes[:, :, 1]), num_obs, num_pred)
 
-    def setup_test(self, tests, num_obs, num_pred, meld_sc, time_sc):
-        self.meld_sc = meld_sc
-        self.time_sc = time_sc
-        self.tests_original = tests
-        self.test_ips_meld = split(self.meld_sc.transform(tests[:, :, 0]), num_obs, num_pred)
-        self.test_ips_time, _ = split(self.time_sc.transform(tests[:, :, 1]), num_obs, num_pred)
+        save_fitted_scaler(self.meld_sc, meld_scaler_path(num_obs, num_pred))
+        save_fitted_scaler(self.time_sc, time_stamp_scaler_path(num_obs, num_pred))
 
     def __getitem__(self, i):
         train = np.concatenate((self.train_ips_meld[i], self.train_ips_time[i]), axis=1)
