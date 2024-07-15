@@ -7,7 +7,7 @@ is_original_key_literal = "is_original"
 
 models = ["attention_lstm", "evr", "rfr", "xgboost", "linear",
           "tcn", "tcn_lstm", "lstm", "cnn_lstm", "time_series_linear"]
-models_to_run = ["attention_lstm", "evr", "rfr", "xgboost", "tcn", "tcn_lstm", "lstm", "cnn_lstm", "time_series_linear"]
+models_to_run = ["rfr", "evr", "xgboost", "lstm", "attention_lstm", "tcn", "tcn_lstm", "time_series_linear"]
 
 real_data_ratio = 0.9
 generalize_ratio = 0.25
