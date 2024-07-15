@@ -43,10 +43,6 @@ def diebold_mariano_util(e1, e2, loss_function='squared'):
     # length of forecasting horizon in this case equal length of predicted/actual MELD.
     h = len(d)
 
-    # Adjust for small sample sizes
-    adj_factor = np.sqrt((len(d) + 1 - 2 * h + h * (h - 1) / len(d)) / len(d))
-    dm_stat *= adj_factor
-
     # Compute the p-value
     p_value = 2 * (1 - t.cdf(abs(dm_stat), df=len(d) - 1))
 
