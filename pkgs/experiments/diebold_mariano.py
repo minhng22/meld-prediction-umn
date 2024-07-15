@@ -38,7 +38,7 @@ def diebold_mariano_two_models(e1, e2, model_1_name, model_2_name):
     dm_stat, p_value = diebold_mariano_util(e1, e2)
     alpha = 0.05
     if p_value < alpha:
-        if dm_stat < 0:
+        if dm_stat > 0:
             print(f"Model {model_2_name} is better than {model_1_name}. p-value: {p_value}. dm_stat: {dm_stat}")
         else:
             print(f"Model {model_1_name} is better than {model_2_name}. p-value: {p_value}. dm_stat: {dm_stat}")
