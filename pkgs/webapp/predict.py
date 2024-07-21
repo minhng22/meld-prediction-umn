@@ -17,6 +17,7 @@ supporting_num_pred = [1, 3, 5, 7]
 def main():
     meld_na_scores, time_stamps, num_obs, num_pred, err = process_input()
     if err is not None:
+        print(err)
         return
     meld_na_scores = np.reshape(meld_na_scores, (1, num_obs))
     time_stamps = np.reshape(time_stamps, (1, num_obs))
@@ -34,13 +35,13 @@ def main():
     num_feature_input = 2  # meld and timestamp
     test_ips_reshaped = np.reshape(ip, (-1, num_obs * num_feature_input))
     model_pred = m.predict(test_ips_reshaped)
-    print(f"model_pred shape {model_pred.shape}")
 
     pred_full = inverse_scale_ops(data.get_test_ip_meld(), model_pred, data.meld_sc, num_obs, num_pred)
     pred_future = pred_full[:, num_obs:]
     pred_future = np.round(pred_future, decimals=3)
+    pred_future = np.reshape(pred_future, num_pred)
 
-    print(f"pred_future is {pred_future}")
+    print(f"MELD score in the next {num_pred} days is {pred_future}")
 
 
 def process_input():

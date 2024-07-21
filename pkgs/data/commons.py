@@ -30,8 +30,9 @@ def generate_timestep_for_plot(x, y):
     return T
 
 
-def split_and_convert_to_3d(data: np.array, num_observed: int, num_predict: int):
-    print("shape of data", data.shape)
+def split_and_convert_to_3d(data: np.array, num_observed: int, num_predict: int, verbose=True):
+    if verbose:
+        print("shape of data", data.shape)
 
     if len(data.shape) != 2:
         raise Exception(
@@ -45,8 +46,9 @@ def split_and_convert_to_3d(data: np.array, num_observed: int, num_predict: int)
     ip = np.reshape(ip, (ip.shape[0], ip.shape[1], 1))
     target = np.reshape(target, (target.shape[0], target.shape[1], 1))
 
-    print("shape of ip data after split ", ip.shape)
-    print("shape of target data after split ", target.shape)
+    if verbose:
+        print("shape of ip data after split ", ip.shape)
+        print("shape of target data after split ", target.shape)
 
     return ip, target
 

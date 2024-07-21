@@ -81,7 +81,7 @@ class SlidingWindowDataset(Dataset):
                     axis=1
                 )
             ),
-            num_obs, num_pred
+            num_obs, num_pred, False
         )
         self.test_ips_time, _ = split_and_convert_to_3d(
             self.time_sc.transform(
@@ -90,7 +90,7 @@ class SlidingWindowDataset(Dataset):
                     axis=1
                 )
             ),
-            num_obs, num_pred
+            num_obs, num_pred, False
         )
 
     def __getitem__(self, i):

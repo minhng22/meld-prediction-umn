@@ -4,7 +4,7 @@ from dash.dependencies import Input, Output, State
 
 # Initialize the Dash app
 app = dash.Dash(__name__)
-app.title = "MELDNa Prediction"
+app.title = "MELDPredict"
 
 # Define the CSS styles
 styles = {
@@ -20,7 +20,7 @@ styles = {
         'boxShadow': '0 4px 8px rgba(0, 0, 0, 0.1)'
     },
     'header': {
-        'fontSize': '2.5em',
+        'fontSize': '2.1em',
         'marginBottom': '20px',
         'color': '#333',
         'fontWeight': 'bold'
@@ -66,29 +66,37 @@ styles = {
     'info': {
         'fontSize': '0.9em',
         'color': '#777',
-        'marginBottom': '20px'
+        'marginBottom': '20px',
+        'padding-left': '50px',
+        'padding-right': '50px',
+        'text-align': 'left',  # Ensure text is left-aligned
     }
 }
 
 app.layout = html.Div(style=styles['container'], children=[
-    html.H1("MELDNa Prediction", style=styles['header']),
+    html.H1("Predict MELD score using Machine Learning", style=styles['header']),
 
     html.Div([
-        html.Label("MELDNa Score", style=styles['label']),
-        html.Div("The scores should be in the format [a1, a2, .. , aN]. "
-                 "This is the MELD of a patient from day 1 to day N. Currently, we support N = 5."
-                 "Example input: [10, 20, 15, 25, 12]",
-                 style=styles['info']),
+        html.Label("MELD Score", style=styles['label']),
+        html.Div([
+            html.P("The scores must be in format [a1, a2, .. , aN]."),
+            html.P("This is the MELD of a patient from day 1 to day N. Currently, we support N = 5. ",
+                   style={'margin-top': '5px'}),
+            html.P("Example input: [10, 20, 15, 25, 12]", style={'margin-top': '5px'})
+        ], style=styles['info']),
         dcc.Input(id='meldna-score', type='text', style=styles['input'], value=''),
     ]),
 
     html.Div([
         html.Label("Time Stamps", style=styles['label']),
-        html.Div("The timestamps should be in the format [a1, a2, .. , aN]. "
-                 "This is the timestamps of the MELD measurement of a patient from day 1 to day N. "
-                 "Currently, we support N=5."
-                 "Example input: [\"2023-01-01\", \"2023-01-02\", \"2023-01-03\", \"2023-01-04\", \"2023-01-05\"]",
-                 style=styles['info']),
+        html.Div([
+            html.P("This is the timestamps of the MELD measurement of a patient from day 1 to day N."),
+            html.P("The timestamps must be in format [a1, a2, .. , aN]. Currently, we support N=5.",
+                   style={'margin-top': '5px'}),
+            html.P("Each timestamp must be in format 'yyyy-mm-dd'.", style={'margin-top': '5px'}),
+            html.P("Example input: ['2023-01-01', '2023-01-02', '2023-01-03', '2023-01-04', '2023-01-05']",
+                   style={'margin-top': '5px'})
+        ], style=styles['info']),
         dcc.Input(id='time-stamps', type='text', style=styles['input'], value=''),
     ]),
 
