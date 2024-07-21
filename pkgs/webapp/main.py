@@ -76,7 +76,8 @@ app.layout = html.Div(style=styles['container'], children=[
     html.Div([
         html.Label("MELDNa Score", style=styles['label']),
         html.Div("The scores should be in the format [a1, a2, .. , aN]. "
-                 "This is the MELD of a patient from day 1 to day N. Currently, we support N being [1, 3, 5, 7].",
+                 "This is the MELD of a patient from day 1 to day N. Currently, we support N = 5."
+                 "Example input: [10, 20, 15, 25, 12]",
                  style=styles['info']),
         dcc.Input(id='meldna-score', type='text', style=styles['input'], value=''),
     ]),
@@ -85,14 +86,15 @@ app.layout = html.Div(style=styles['container'], children=[
         html.Label("Time Stamps", style=styles['label']),
         html.Div("The timestamps should be in the format [a1, a2, .. , aN]. "
                  "This is the timestamps of the MELD measurement of a patient from day 1 to day N. "
-                 "Currently, we support N being [1, 3, 5, 7].",
+                 "Currently, we support N=5."
+                 "Example input: [\"2023-01-01\", \"2023-01-02\", \"2023-01-03\", \"2023-01-04\", \"2023-01-05\"]",
                  style=styles['info']),
         dcc.Input(id='time-stamps', type='text', style=styles['input'], value=''),
     ]),
 
     html.Div([
         html.Label("Number of Predicting Days", style=styles['label']),
-        html.Div("This is the number of MELD scores to predict.",
+        html.Div("This is the number of MELD scores to predict. Currently, we support N in [1, 3, 5, 7]",
                  style=styles['info']),
         dcc.Input(id='num-of-predicting-days', type='text', style=styles['input'], value=''),
     ]),
