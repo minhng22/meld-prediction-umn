@@ -30,7 +30,7 @@ def generate_timestep_for_plot(x, y):
     return T
 
 
-def split(data: np.array, num_observed: int, num_predict: int):
+def split_and_convert_to_3d(data: np.array, num_observed: int, num_predict: int):
     print("shape of data", data.shape)
 
     if len(data.shape) != 2:

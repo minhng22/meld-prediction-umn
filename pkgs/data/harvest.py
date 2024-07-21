@@ -56,16 +56,24 @@ def harvest_data_with_interpolate(df: pd.DataFrame, window_size: int, real_data_
         arr_train_score, arr_test_score = find_train_test(
             g["score"].values, window_size, real_data_ratio, g["is_original"].values
         )
+
+        # g["timestamp"].values and arr_train_time is in datetime format : datetime64[ns]
         arr_train_time, arr_test_time = find_train_test(
             g["timestamp"].values, window_size, real_data_ratio, g["is_original"].values
         )
 
-        def add_dim(arr):
+        print(f'stuff {arr_train_time.dtype}')
+
+        # convert timestamp to float. convert meld score to float.
+        def convert_np_to_float_and_add_dim(arr: np.ndarray):
             arr = arr.astype(float)
             return np.expand_dims(arr, axis=-1)
 
         arr_train_time, arr_test_time, arr_train_score, arr_test_score = (
-            add_dim(arr_train_time), add_dim(arr_test_time), add_dim(arr_train_score), add_dim(arr_test_score))
+            convert_np_to_float_and_add_dim(arr_train_time), convert_np_to_float_and_add_dim(arr_test_time),
+            convert_np_to_float_and_add_dim(arr_train_score), convert_np_to_float_and_add_dim(arr_test_score))
+
+        print(f'stuff {arr_train_time.dtype}')
 
         if (arr_train_time.shape[0] == 0 or arr_train_score.shape[0] == 0 or
                 arr_test_score.shape[0] == 0 or arr_test_time.shape[0] == 0):

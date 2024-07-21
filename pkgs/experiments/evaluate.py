@@ -149,7 +149,7 @@ def run(num_obs, num_pred, real_data_ratio, generalize_ratio, interpolate_amount
     eval_res_test, eval_res_gen = evaluate_models(trained_models, dataset, num_obs, num_pred, num_feature_input, device)
 
     diebold_mariano_test(eval_res_test, "test", num_pred)
-    diebold_mariano_test(eval_res_test, "generalize", num_pred)
+    diebold_mariano_test(eval_res_gen, "generalize", num_pred)
 
     plot_line_models(
         y_target=dataset.get_original_meld_test()[:, num_obs:],
