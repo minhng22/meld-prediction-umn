@@ -1,6 +1,7 @@
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
+from predict import main
 
 # Initialize the Dash app
 app = dash.Dash(__name__)
@@ -94,6 +95,7 @@ app.layout = html.Div(style=styles['container'], children=[
             html.P("The timestamps must be in format [a1, a2, .. , aN]. Currently, we support N=5.",
                    style={'margin-top': '5px'}),
             html.P("Each timestamp must be in format 'yyyy-mm-dd'.", style={'margin-top': '5px'}),
+            html.P("Timestamps have to be sorted and evenly spaced.", style={'margin-top': '5px'}),
             html.P("Example input: ['2023-01-01', '2023-01-02', '2023-01-03', '2023-01-04', '2023-01-05']",
                    style={'margin-top': '5px'})
         ], style=styles['info']),
@@ -123,11 +125,9 @@ app.layout = html.Div(style=styles['container'], children=[
 )
 def update_output(n_clicks, meld_na_scores, time_stamps, num_of_predicting_days):
     if n_clicks > 0:
-        # Example:
-        import subprocess
-        result = subprocess.run(['python', '-m', 'pkgs.webapp.predict', meld_na_scores, time_stamps, num_of_predicting_days],
-                                capture_output=True, text=True)
-        return result.stdout
+        print(f"Predicting MELD scores with MELDNa scores: {meld_na_scores}, time stamps: {time_stamps}, "
+              f"and number of predicting days: {num_of_predicting_days}")
+        return html.Div(main(meld_na_scores, time_stamps, num_of_predicting_days), style=styles['info'])
 
     return html.Div("The predicted MELD scores will be displayed here.", style=styles['info'])
 
