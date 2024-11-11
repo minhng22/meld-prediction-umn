@@ -1,0 +1,1 @@
+webapp is run in server with cmd: python -m pkgs.webapp.main (from root)
