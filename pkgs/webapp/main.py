@@ -1,7 +1,7 @@
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
-from predict import main
+from pkgs.webapp.predict import main
 
 # Initialize the Dash app
 app = dash.Dash(__name__)
